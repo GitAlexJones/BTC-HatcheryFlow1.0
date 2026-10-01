@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Animated Whatcom Creek Hatchery flow diagram with tour talking points, part and valve close-ups, and operating scenarios.">
+<title>BTC Hatchery Flow 1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: engineering-drawing stage on the left (sticky), study panel on the right; stacks on phones with the drawing pinned on top. */
+:root{
+  --bg:#e9eeec; --surface:#f8faf9; --ink:#13221e; --muted:#566964; --rule:#cfd9d6;
+  --accent:#c4512f; --accent-soft:#f6ddd3;
+  --sup:#2f84cf; --pond:#c33a2e; --drain:#3a9435; --ladder:#5f8f9c; --trash:#b07d00;
+  --water:#c3d3d1; --water-edge:#22312e; --bldg:#e3e8e6; --creek:#9ec4d6;
+  --open:#2c8c63; --closed:#8a9692;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1614; --surface:#15201e; --ink:#e2ebe8; --muted:#93a6a1; --rule:#2a3a37;
+  --accent:#f0896b; --accent-soft:#3a2219;
+  --sup:#6db4f0; --pond:#f06d5f; --drain:#6fcb63; --ladder:#7fb3c1; --trash:#e2b13a;
+  --water:#2b3d3b; --water-edge:#a9bdb8; --bldg:#1d2a28; --creek:#24465a;
+  --open:#4cc28e; --closed:#6c7d79; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1614; --surface:#15201e; --ink:#e2ebe8; --muted:#93a6a1; --rule:#2a3a37;
+  --accent:#f0896b; --accent-soft:#3a2219;
+  --sup:#6db4f0; --pond:#f06d5f; --drain:#6fcb63; --ladder:#7fb3c1; --trash:#e2b13a;
+  --water:#2b3d3b; --water-edge:#a9bdb8; --bldg:#1d2a28; --creek:#24465a;
+  --open:#4cc28e; --closed:#6c7d79; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;margin:0}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:20px;padding-block:18px 40px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;padding-bottom:14px;border-bottom:2px solid var(--ink);margin-bottom:16px}
+.eyebrow{font-family:var(--f-mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1;margin:4px 0 0;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sheet{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);text-align:right;line-height:1.6}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(380px,1fr);gap:18px;align-items:start}
+.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);display:flex;flex-direction:column;gap:10px;min-width:0}
+.scen{display:flex;flex-wrap:wrap;gap:6px}
+.scen button{font-family:var(--f-body);font-weight:700;font-size:15px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:5px 12px;border-radius:3px;cursor:pointer}
+.scen button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.scen button:hover{border-color:var(--accent)}
+button:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.board{background:var(--surface);border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;position:relative}
+.board svg{display:block;width:100%;height:auto;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.board svg.zoomed{touch-action:none}
+.board svg.dragging{cursor:grabbing}
+.zoomctl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.zoomctl button{width:42px;height:42px;font:700 22px/1 var(--f-body);background:var(--surface);color:var(--ink);border:1.5px solid var(--ink);border-radius:4px;cursor:pointer;display:grid;place-items:center}
+.zoomctl button:hover{border-color:var(--accent);color:var(--accent)}
+.zoomctl button.fit{font-size:12px;height:auto;padding:6px 0;line-height:1.15}
+.zoomhint{position:absolute;left:10px;top:10px;font-size:13px;background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:3px 8px;color:var(--muted);pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14.5px;color:var(--ink);padding:8px 12px;border-top:1px solid var(--rule)}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px dashed;vertical-align:middle;margin-right:6px}
+.legend .vk{display:inline-flex;align-items:center;gap:5px}
+.steps{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:12px 14px}
+.steps h3{font-size:19px;margin:0 0 4px}
+.steps p{margin:0 0 8px;font-size:16px}
+.steps ol{margin:4px 0 0;padding-left:22px;font-size:16px}
+.steps li{margin:4px 0}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.chip{font-family:var(--f-mono);font-size:11px;font-weight:600;padding:2px 6px;border-radius:2px;border:1px solid var(--rule)}
+.chip.o{color:var(--open);border-color:var(--open)}
+.chip.c{color:var(--closed)}
+.flag{display:inline-block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.flag.ok{background:transparent;border:1px solid var(--open);color:var(--open)}
+/* panel */
+.panel{display:flex;flex-direction:column;gap:12px;min-width:0}
+.sel{background:var(--surface);border:1.5px solid var(--accent);border-radius:4px;padding:12px 14px}
+.sel[hidden]{display:none!important}
+.sel .k{font-family:var(--f-mono);font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.sel h3{font-size:22px;margin:2px 0 0;line-height:1.2}
+.sel p{margin:6px 0 0;font-size:16.5px}
+.sel .x{float:right;border:0;background:none;color:var(--ink);cursor:pointer;font-size:15px;text-decoration:underline}
+.tabs{display:flex;border-bottom:2px solid var(--ink);gap:2px}
+.tabs button{font-family:var(--f-body);font-weight:700;font-size:17px;background:none;border:0;padding:6px 12px;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.tools{display:flex;justify-content:flex-end;gap:8px}
+.toggle{display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.nav{display:flex;gap:6px}
+.nav button{font-family:var(--f-body);font-size:15px;font-weight:700;border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:3px;padding:6px 14px;cursor:pointer}
+.nav button:hover{border-color:var(--accent)}
+.qlist{display:flex;flex-direction:column;gap:6px}
+.q{background:var(--surface);border:1px solid var(--rule);border-radius:4px}
+.q.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.q>button.qh{all:unset;box-sizing:border-box;display:grid;grid-template-columns:34px 1fr;gap:10px;width:100%;padding:12px 14px;cursor:pointer}
+.q>button.qh:focus-visible{outline:2.5px solid var(--accent);outline-offset:-2px}
+.qn{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.qt{font-weight:700;font-size:17px;line-height:1.4}
+.qb{padding:0 18px 16px 58px;font-size:17px}
+.qb p{margin:8px 0}
+.qb ul{margin:6px 0;padding-left:18px}
+.qb li{margin:5px 0}
+.qb .src{margin-top:4px}
+.ans[hidden]{display:none!important}
+.v{font-family:var(--f-mono);font-size:15px;font-weight:600;background:var(--bg);padding:0 4px;border-radius:2px;white-space:nowrap}
+textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px solid var(--rule);border-radius:3px;background:var(--bg);color:var(--ink);padding:7px 9px;resize:vertical;margin-top:6px}
+.nlabel{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:10px;display:block}
+.parts h4{font-size:16px;color:var(--ink);margin:14px 0 6px}
+.parts h4:first-child{margin-top:4px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.pbtn{font:inherit;font-size:15.5px;text-align:left;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:6px 9px;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0}
+.pbtn:hover{border-color:var(--accent)}
+.pbtn.on{border-color:var(--accent);background:var(--accent-soft)}
+.pbtn .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.foot{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:80ch}
+/* svg */
+.ln{fill:none;stroke-width:3.4;stroke-dasharray:11 7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s}
+.ln.sup{stroke:var(--sup)}.ln.pond{stroke:var(--pond)}.ln.drain{stroke:var(--drain)}.ln.trash{stroke:var(--trash);stroke-dasharray:4 5;stroke-width:4}
+.ln.ladder{stroke:var(--ladder);stroke-dasharray:3 9;stroke-width:3}
+.ln.idle{opacity:.32}
+.ln.act{animation:flow 1.1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.arw{transition:opacity .25s}
+.arw.idle{opacity:.18}
+.pt{pointer-events:none}
+.part{cursor:pointer;transition:opacity .25s}
+.dimmed .part.dim,.dimmed .ln.dim,.dimmed .arw.dim,.dimmed .lbl.dim{opacity:.3}
+.dimmed .ln.hl{opacity:1;stroke-width:5.5}
+.part.hl .shape{stroke:var(--accent);stroke-width:4}
+.part.hl .vb{stroke:var(--accent);stroke-width:2.6}
+.part:hover .shape{stroke:var(--accent)}
+.pondshape{fill:var(--water);stroke:var(--water-edge);stroke-width:3}
+.swirl{fill:none;stroke:var(--water-edge);stroke-width:1.4;opacity:.5}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 14s linear infinite}
+.spin.rev{animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lbl{font-family:var(--f-display);font-weight:700;fill:var(--ink);letter-spacing:.04em;pointer-events:none;transition:opacity .25s}
+.tag rect{fill:var(--surface);stroke:var(--ink);stroke-width:1.1}
+.tag text{font-family:var(--f-mono);font-size:15.5px;font-weight:600;fill:var(--ink)}
+.vb{stroke:var(--surface);stroke-width:1.4}
+.vb.o{fill:var(--open)}.vb.c{fill:var(--closed)}
+.vx{stroke:var(--surface);stroke-width:2.2}
+.creekband{fill:var(--creek)}
+.ripple{fill:none;stroke:var(--surface);stroke-width:1.5;opacity:.55}
+.bldg{fill:var(--bldg);stroke:var(--ink);stroke-width:3}
+.hatch{stroke:var(--muted);stroke-width:1;opacity:.5}
+.ladderband{fill:none;stroke:var(--water-edge);stroke-width:30;stroke-linejoin:miter}
+.ladderin{fill:none;stroke:var(--water);stroke-width:24;stroke-linejoin:miter}
+.rungs{fill:none;stroke:var(--water-edge);stroke-width:24;stroke-dasharray:1.4 10;opacity:.7}
+.pumpblade{fill:var(--ink)}
+.pump-off .pumpblade{fill:var(--closed)}
+.pump-on .pumpblade{transform-box:fill-box;transform-origin:center;animation:spin 1.2s linear infinite}
+@media (prefers-reduced-motion: reduce){.ln.act,.spin,.pump-on .pumpblade{animation:none}}
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .stage{display:contents}
+  .scen{order:0}
+  .board{order:1;position:sticky;top:env(safe-area-inset-top,0px);z-index:3}
+  .panel{order:2}
+  .steps{order:3}
+  .legend{display:none}
+  .scen button{font-size:13.5px;padding:4px 9px}
+  .sheet{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Whatcom Creek Hatchery · Tour guide</div>
+      <h1>BTC Hatchery Flow <span>1.0</span></h1>
+    </div>
+    <div class="sheet">Based on Wilson Engineering<br>Hatchery Flow Diagram · Job 2011‑111 · Mar 2013</div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" id="stage" aria-label="Animated hatchery diagram">
+      <div class="scen" role="group" aria-label="Operating scenario" id="scen"></div>
+      <div class="board">
+        <div class="zoomctl" role="group" aria-label="Zoom">
+          <button id="zin" aria-label="Zoom in">+</button>
+          <button id="zout" aria-label="Zoom out">−</button>
+          <button id="zfit" class="fit" aria-label="Show full diagram">Full<br>view</button>
+        </div>
+        <div class="zoomhint" id="zhint">Tap any part to zoom in · drag to move</div>
+        <svg id="dia" viewBox="40 40 1520 1060" role="img" aria-label="Plan view of the Whatcom Creek Hatchery flow system">
+          <defs>
+            <pattern id="hatchp" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="12" class="hatch"/>
+            </pattern>
+          </defs>
+          <g id="g-base"></g>
+          <g id="g-lines"></g>
+          <g id="g-parts"></g>
+          <g id="g-particles" class="pt"></g>
+        </svg>
+        <div class="legend">
+          <span><i style="border-color:var(--sup)"></i>Supply water</span>
+          <span><i style="border-color:var(--pond)"></i>Pond transfer &amp; drains</span>
+          <span><i style="border-color:var(--drain)"></i>Effluent &amp; storm drain</span>
+          <span><i style="border-color:var(--ladder)"></i>Pond / ladder flow</span>
+          <span class="vk"><svg width="18" height="12" viewBox="-10 -7 20 14"><polygon points="-9,-6 0,0 -9,6" class="vb o"/><polygon points="9,-6 0,0 9,6" class="vb o"/></svg>Open</span>
+          <span class="vk"><svg width="18" height="12" viewBox="-10 -7 20 14"><polygon points="-9,-6 0,0 -9,6" class="vb c"/><polygon points="9,-6 0,0 9,6" class="vb c"/></svg>Closed</span>
+        </div>
+      </div>
+      <div class="steps" id="steps"></div>
+    </section>
+
+    <section class="panel">
+      <div class="sel" id="sel" hidden aria-live="polite"></div>
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-q" aria-selected="true" aria-controls="pane-q">Talking points</button>
+        <button role="tab" id="tab-p" aria-selected="false" aria-controls="pane-p">Parts &amp; valves</button>
+      </div>
+      <div id="pane-q" role="tabpanel" aria-labelledby="tab-q">
+        <div class="tools" style="margin-bottom:10px">
+          <div class="nav"><button id="prev">← Prev</button><button id="next">Next →</button></div>
+        </div>
+        <div class="qlist" id="qlist"></div>
+      </div>
+      <div id="pane-p" role="tabpanel" aria-labelledby="tab-p" class="parts" hidden></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const $=s=>document.querySelector(s);
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const V=s=>`<span class="v">${s}</span>`;
+
+/* ---------- flow lines (coordinates traced from the drawing, rotated upright) ---------- */
+const PATHS={
+ in_main:{c:'sup',pts:[[1373,1046],[1312,1046],[1260,907],[882,795]]},
+ in_v9:{c:'sup',pts:[[882,795],[842,790],[812,786]]},
+ v10:{c:'sup',pts:[[882,795],[882,770],[900,770]]},
+ pump:{c:'pond',pts:[[657,710],[845,756],[900,770]]},
+ trash:{c:'trash',pts:[[792,742],[868,760]]},
+ riser:{c:'sup',pts:[[900,770],[900,600]]},
+ to_hatch:{c:'sup',pts:[[900,600],[918,560],[1060,360],[1107,300],[1107,190]]},
+ to_ponds:{c:'sup',pts:[[900,600],[1040,745],[1235,745]]},
+ v3b:{c:'sup',pts:[[1040,745],[1095,705]]},
+ v3a:{c:'sup',pts:[[1235,745],[1335,665]]},
+ v6:{c:'pond',pts:[[790,712],[850,730],[884,736],[884,590],[897,567],[914,530]]},
+ hdr:{c:'pond',pts:[[907,432],[917,508]]},
+ p2_v4:{c:'pond',pts:[[1107,615],[1252,745]]},
+ p1_v4:{c:'pond',pts:[[1418,615],[1252,745]]},
+ v4_creek:{c:'pond',pts:[[1252,745],[1252,1040]]},
+ p2_hw:{c:'pond',pts:[[1107,615],[1000,522],[907,432]]},
+ p1_hw:{c:'pond',pts:[[1418,615],[1345,485],[1305,425],[907,425]]},
+ v11_hw:{c:'pond',pts:[[1070,468],[907,438]]},
+ eff:{c:'drain',pts:[[920,190],[920,212],[1070,330],[1070,468]]},
+ v11_di:{c:'drain',pts:[[1070,468],[1024,510]]},
+ di2_storm:{c:'drain',pts:[[1022,512],[968,463]]},
+ di1_storm:{c:'drain',pts:[[1335,522],[1230,470],[968,463]]},
+ storm_out:{c:'drain',pts:[[968,463],[808,296],[730,296]]},
+ v14:{c:'pond',pts:[[612,862],[595,915],[520,975],[445,1040]]},
+ siphon:{c:'pond',pts:[[494,666],[475,622],[444,590],[450,540]]},
+ fish:{c:'pond',pts:[[515,808],[466,797],[409,712],[412,687],[462,650],[406,572]]},
+ v12:{c:'pond',pts:[[262,581],[247,591],[206,619],[197,1040]]},
+ raceway:{c:'ladder',pts:[[914,520],[860,470],[760,450],[640,458],[530,505],[400,562],[325,594]]},
+ ladder:{c:'ladder',pts:[[325,594],[231,640],[431,844],[387,894],[360,1040]]}
+};
+
+/* ---------- parts ---------- */
+const PARTS={
+ creek:{n:'Whatcom Creek',k:'Water source',d:'The hatchery\'s water source. Creek water is taken in upstream at the Dupont Street Bridge, and every drain line (V-4, V-12, V-14, the fish ladder and the storm drain) returns water to the creek downstream.',g:'Source'},
+ intake:{n:'Intake screen',k:'Water source',d:'Screened intake in Whatcom Creek under the Dupont Street Bridge. All creek water for the facility enters here and runs by gravity through the supply line. The air burst system keeps this screen clear.',g:'Source'},
+ pond0:{n:'Pond Ø (Pond 0)',k:'Pond',d:'Large elevated head pond. Holds creek water as a reservoir for the hatchery pump, and feeds Ponds 3 & 4 by gravity through V-6 / V-5 and the 8" siphon.',g:'Ponds'},
+ pump:{n:'Pond Ø pump',k:'Pump',d:'Pumps from the center of Pond Ø through V-7 into the supply line that serves the hatchery building and Ponds 1 & 2.',g:'Structures'},
+ coupler:{n:'Quick coupler (trash pump)',k:'Fitting',d:'Hose connection on the pump line just past V-7. If the hatchery pump is inoperable, V-7 is closed and a trash pump is hooked up here (drawing Note 2).',g:'Structures'},
+ pond1:{n:'Pond 1',k:'Pond',d:'Round rearing pond. Filled from the supply line through V-3A. Its center drain box sends water either to V-4 (to the creek) or through V-2A to the headwaters.',g:'Ponds'},
+ pond2:{n:'Pond 2',k:'Pond',d:'Round rearing pond. Filled from the supply line through V-3B. Its center drain box sends water either to V-4 (to the creek) or through V-2B to the headwaters.',g:'Ponds'},
+ pond3:{n:'Pond 3',k:'Pond',d:'Raceway pond fed from below through the upwell grate at its head. Water flows on into Pond 4.',g:'Ponds'},
+ pond4:{n:'Pond 4',k:'Pond',d:'Lower raceway pond. It connects to the fish ladder, so returning adults climb from the creek into Pond 4. The 8" siphon and fish deposit line also enter here.',g:'Ponds'},
+ upwell:{n:'Upwell grate',k:'Structure',d:'Inlet at the head of Pond 3 where water wells up from below. Both the headwaters junction and the Pond Ø gravity line (V-5) discharge here.',g:'Structures'},
+ headbox:{n:'Headwaters junction',k:'Structure',d:'Collection point for water heading to the upwell grate: Pond 1 (V-2A), Pond 2 (V-2B) and hatchery effluent (V-11).',g:'Structures'},
+ ladder:{n:'Fish ladder',k:'Structure',d:'Stepped channel from Pond 4 down to Whatcom Creek. Water leaving Ponds 3 & 4 runs down the ladder, and that flow attracts returning adult salmon up into the ponds.',g:'Structures'},
+ siphon:{n:'8" siphon',k:'Pipe',d:'Siphon line between Pond Ø and Pond 4, controlled by V-13. It is primed through the quick coupler beside V-13.',g:'Structures'},
+ fishdep:{n:'Fish deposit & 3" hose',k:'Structure',d:'Fish transfer point beside Pond Ø. A 3" hose supplies water that carries fish through the line into Pond 4.',g:'Structures'},
+ hatchery:{n:'Hatchery building',k:'Building',d:'Houses the incubation room. The supply line enters on the pond side at the end above Pond 2; effluent leaves on the pond side at the Pond Ø end and runs to V-11.',g:'Structures'},
+ headbox2:null,
+ di1:{n:'Drop inlet, Pond 1',k:'Drain',d:'Overflow inlet at the rim of Pond 1 that leads to the storm drain manhole. Its valve V-1A stays closed.',g:'Drains'},
+ di2:{n:'Drop inlet, Pond 2',k:'Drain',d:'Overflow inlet at the rim of Pond 2 that leads to the storm drain manhole. Its valve V-1B stays closed.',g:'Drains'},
+ storm:{n:'Storm drain manhole',k:'Drain',d:'Collects drop-inlet water from Ponds 1 & 2 and sends it to the "C" Street storm drain, which empties to the creek.',g:'Drains'},
+ cst:{n:'"C" Street storm drain',k:'Drain',d:'City storm drain that carries water from the storm manhole to the creek.',g:'Drains'},
+ V0:{n:'V-Ø',k:'Valve',d:'Main intake valve beside the intake screen. Controls all creek water entering the system.',g:'Valves'},
+ V9:{n:'V-9',k:'Valve',d:'Fills Pond Ø from the creek supply line. Closed when draining Pond Ø (Note 1).',g:'Valves'},
+ V10:{n:'V-10',k:'Valve',d:'Bypass from the creek supply line straight into the hatchery supply riser, skipping Pond Ø. Opened when draining Pond Ø (Note 1) so the hatchery and Ponds 1 & 2 keep getting water.',g:'Valves'},
+ V7:{n:'V-7',k:'Valve',d:'Pump discharge valve. Controls water sent from the Pond Ø pump to the hatchery. Closed when the pump fails so a trash pump can be connected at the quick coupler (Note 2).',g:'Valves'},
+ V8:{n:'V-8',k:'Valve',d:'Abandoned (drawing note ****). Located in the Pond Ø valve cluster beside V-7. Not used.',g:'Valves',nos:1},
+ V6:{n:'V-6',k:'Valve',d:'Gravity line from Pond Ø to the upwell grate in Pond 3. Closed when draining Pond Ø (Note 1).',g:'Valves'},
+ V5:{n:'V-5',k:'Valve',d:'Last valve before the upwell grate on the Pond Ø gravity line.',g:'Valves'},
+ V3A:{n:'V-3A',k:'Valve',d:'Supply valve that fills Pond 1.',g:'Valves'},
+ V3B:{n:'V-3B',k:'Valve',d:'Supply valve that fills Pond 2.',g:'Valves'},
+ V2A:{n:'V-2A',k:'Valve',d:'Sends Pond 1 water to the headwaters junction and on to the upwell grate in Pond 3.',g:'Valves'},
+ V2B:{n:'V-2B',k:'Valve',d:'Sends Pond 2 water to the headwaters junction and on to the upwell grate in Pond 3.',g:'Valves'},
+ V4:{n:'V-4',k:'Valve',d:'Common drain for Ponds 1 & 2. Sends their outflow straight to Whatcom Creek.',g:'Valves'},
+ V11:{n:'V-11',k:'Valve',d:'On the hatchery effluent line. Per drawing note ***, it is diverted to the headwaters at all times, so incubation water is reused in Ponds 3 & 4.',g:'Valves'},
+ V12:{n:'V-12',k:'Valve',d:'Drain at the head of the fish ladder that sends Pond 3 & 4 water straight to Whatcom Creek.',g:'Valves'},
+ V13:{n:'V-13',k:'Valve',d:'Valve on the 8" siphon where it enters Pond 4.',g:'Valves'},
+ V14:{n:'V-14',k:'Valve',d:'Pond Ø standpipe drain to Whatcom Creek. Opened together with V-10 to drain Pond Ø (Note 1).',g:'Valves'},
+ V1A:{n:'V-1A',k:'Valve',d:'Pond 1 drop inlet valve. Remains closed (note *).',g:'Valves'},
+ V1B:{n:'V-1B',k:'Valve',d:'Pond 2 drop inlet valve. Remains closed (note **).',g:'Valves'}
+};
+delete PARTS.headbox2;
+
+/* valve positions: x,y, tag offset dx,dy */
+const VALVES={
+ V0:[1338,1046,-22,-30], V9:[842,790,-62,22], V10:[882,782,14,28], V7:[845,756,-70,-8], V6:[852,731,-62,-34],
+ V5:[890,579,-62,0], V3B:[1067,725,-30,30], V3A:[1290,701,-80,10], V4:[1252,745,16,26], V2B:[1040,557,-82,4],
+ V2A:[1370,529,14,6], V11:[1070,468,14,-10], V12:[247,591,-60,-34], V13:[444,590,16,-20], V14:[606,880,16,18],
+ V1A:[1300,505,-14,-34], V1B:[1004,496,-74,-22]
+};
+const VALVE_PATH={V0:'in_main',V9:'in_v9',V10:'v10',V7:'pump',V6:'v6',V5:'v6',V3B:'v3b',V3A:'v3a',V4:'v4_creek',V2B:'p2_hw',V2A:'p1_hw',V11:'eff',V12:'v12',V13:'siphon',V14:'v14',V1A:'di1_storm',V1B:'di2_storm'};
+
+/* ---------- scenarios ---------- */
+const NORMAL=['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','v6','hdr','p1_v4','p2_v4','v4_creek','eff','v11_hw','raceway','ladder'];
+const SCEN={
+ normal:{t:'Normal operation',open:['V0','V9','V7','V6','V5','V3A','V3B','V4','V11'],paths:NORMAL,pump:1,
+   lead:'Creek water fills Pond Ø. The pump lifts it to the hatchery and Ponds 1 & 2, while Pond Ø also feeds Ponds 3 & 4 by gravity.',
+   steps:['Creek water enters the intake screen and passes V-Ø.','V-9 fills Pond Ø; V-10 bypass stays closed.','The Pond Ø pump sends water through V-7 up the supply riser to the hatchery and, through V-3A / V-3B, to Ponds 1 & 2.','Pond Ø gravity-feeds the upwell grate in Pond 3 through V-6 and V-5.','Hatchery effluent goes through V-11 to the headwaters (Note ***). Ponds 1 & 2 drain through V-4 to the creek.','Ponds 3 & 4 overflow down the fish ladder to the creek.']},
+ spawn:{t:'Spawning season',open:['V0','V9','V7','V6','V5','V3A','V3B','V2A','V2B','V11'],paths:['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','v6','hdr','p1_hw','p2_hw','eff','v11_hw','raceway','ladder'],pump:1,flag:1,
+   lead:'Ponds 1 & 2 are filled and their outflow is sent to the headwaters instead of the creek, adding flow to Ponds 3 & 4 and the fish ladder.',
+   steps:['Fill Ponds 1 & 2 through V-3A and V-3B.','Close V-4 so pond water doesn\'t go straight to the creek.','Open V-2A and V-2B to send Pond 1 & 2 water to the headwaters junction.','Combined water rises through the upwell grate into Pond 3 and moves through Pond 4.','Extra flow down the fish ladder draws returning adults up into Pond 4.']},
+ drain0:{t:'Drain Pond Ø',open:['V0','V10','V14','V5','V3A','V3B','V4','V11'],paths:['in_main','v10','riser','to_hatch','to_ponds','v3a','v3b','v14','p1_v4','p2_v4','v4_creek','eff','v11_hw','hdr','raceway','ladder'],pump:0,
+   lead:'Drawing Note 1. Creek water bypasses Pond Ø through V-10 so the hatchery keeps its supply while Pond Ø empties through the standpipe.',
+   steps:['Open V-10 so creek water goes straight to the supply riser.','Open V-14 to drain Pond Ø through its standpipe to the creek.','Close V-9 so creek water stops filling Pond Ø.','Close V-6 so Pond Ø stops feeding the upwell grate.']},
+ pumpfail:{t:'Pump failure',open:['V0','V9','V6','V5','V3A','V3B','V4','V11'],paths:NORMAL.filter(p=>p!=='pump').concat(['trash']),pump:0,trash:1,flag:1,
+   lead:'Drawing Note 2. With the hatchery pump down, a trash pump at the quick coupler takes over. Ponds 3 & 4 keep running on gravity from Pond Ø.',
+   steps:['Close V-7 to isolate the dead pump.','Hook a trash pump up to the quick coupler and draw from Pond Ø.','Trash pump water fills the supply riser, reaching the hatchery and Ponds 1 & 2 (V-3A / V-3B).','Ponds 3 & 4 still get gravity flow from Pond Ø through V-6 and V-5.']},
+ drain34:{t:'Drain Ponds 3 & 4',open:['V0','V9','V7','V3A','V3B','V4','V11','V12'],paths:['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','p1_v4','p2_v4','v4_creek','eff','v11_hw','hdr','v12'],pump:1,flag:1,
+   lead:'Inputs to Pond 3 are shut and V-12, at the head of the fish ladder, sends pond water to the creek.',
+   steps:['Close V-6 / V-5 to stop gravity flow from Pond Ø (and keep V-2A, V-2B, V-13 closed).','Lift the diamond plate over V-12 (Note 3: valves sit under diamond plate).','Open V-12 to drain Ponds 3 & 4 straight to Whatcom Creek.']}
+};
+
+/* ---------- talking points ---------- */
+const Q=[
+ {q:'What is our water source and where is it located? What valve controls it?',s:'normal',src:1,hl:['creek','intake','V0','p:in_main'],
+  a:`<p><b>Whatcom Creek.</b> Water enters through the intake screen in the creek under the <b>Dupont Street Bridge</b>, upstream of the ponds, and flows by gravity through the supply line.</p><p>${V('V-Ø')} (V-zero), right beside the intake screen, controls it.</p>`},
+ {q:'What is the purpose of the air burst system?',s:'normal',src:0,hl:['intake','V0'],
+  a:`<p>It keeps the <b>intake screen clear</b>. Leaves, sticks and sediment in the creek pile up on the screen and choke the flow. The air burst blasts compressed air back through the screen to knock that debris loose so the whole system keeps getting water.</p>`},
+ {q:'What is the purpose of Pond Ø? Why is it elevated?',s:'normal',src:1,hl:['pond0','V9','pump','V6','V5','p:in_v9','p:v6','p:pump','siphon','p:siphon','upwell'],
+  a:`<p>Pond Ø is the <b>head pond and reservoir</b> for the facility. Creek water fills it through ${V('V-9')}. From there:</p><ul><li>The Pond Ø pump sends water to the hatchery and Ponds 1 & 2.</li><li>Gravity carries water through ${V('V-6')} and ${V('V-5')} to the upwell grate in Pond 3, and through the 8" siphon to Pond 4.</li></ul><p>It is <b>elevated so gravity can do the work</b>: water reaches Ponds 3 & 4 without a pump, and the stored volume is a buffer if the intake or pump has a problem.</p>`},
+ {q:'How many inputs can provide water to Ponds 3 & 4?',s:'spawn',src:1,hl:['upwell','headbox','pond3','pond4','V5','V6','V2A','V2B','V11','V13','siphon','p:v6','p:p1_hw','p:p2_hw','p:v11_hw','p:hdr','p:siphon'],
+  a:`<p>The drawing shows <b>five</b>:</p><ul><li><b>Pond Ø gravity line</b> through ${V('V-6')} and ${V('V-5')} to the upwell grate</li><li><b>Pond 1</b> through ${V('V-2A')} to the headwaters</li><li><b>Pond 2</b> through ${V('V-2B')} to the headwaters</li><li><b>Hatchery effluent</b> through ${V('V-11')} to the headwaters</li><li><b>8" siphon</b> from Pond Ø into Pond 4 through ${V('V-13')}</li></ul><p>The first four all enter through the upwell grate in Pond 3.</p>`},
+ {q:'How can you open the kettle to drain Ponds 3 & 4?',s:'drain34',src:0,hl:['V12','p:v12','pond3','pond4','ladder'],
+  a:`<p>On the drawing, the drain for Ponds 3 & 4 is ${V('V-12')}, at the head of the fish ladder where it meets Pond 4. It sends water straight to Whatcom Creek.</p><ul><li>Shut off the inputs (V-6 / V-5, and keep V-2A, V-2B, V-13 closed).</li><li>Lift the diamond plate (Note 3: all valves are under diamond plate).</li><li>Open V-12.</li></ul>`},
+ {q:'What is the purpose of filling Ponds 1 and 2 during spawning?',s:'spawn',src:1,hl:['pond1','pond2','V2A','V2B','V4','headbox','upwell','ladder','p:p1_hw','p:p2_hw','p:hdr','p:raceway','p:ladder'],
+  a:`<p>To <b>add water to Ponds 3 & 4 and the fish ladder</b>. With ${V('V-4')} closed and ${V('V-2A')} / ${V('V-2B')} open, Pond 1 & 2 water goes to the headwaters, up through the upwell grate, through Ponds 3 & 4 and down the fish ladder.</p><p>The stronger flow out of the ladder is <b>attraction water</b>: returning adult salmon follow it up the ladder into Pond 4, where they can be held for spawning.</p>`},
+ {q:'How is water sent to the hatchery? Which valve controls this?',s:'normal',src:1,hl:['pump','V7','coupler','p:pump','p:riser','p:to_hatch','hatchery','pond0'],
+  a:`<p>The <b>Pond Ø pump</b> draws from the center of Pond Ø and pushes water up the supply riser to the hatchery building.</p><p>${V('V-7')} controls it. (${V('V-10')} is a separate bypass from the intake used when Pond Ø is drained.)</p>`},
+ {q:'Where does water enter the hatchery building? The incubation room?',s:'normal',src:0,hl:['hatchery','p:to_hatch'],
+  a:`<p><b>Building:</b> the supply line enters on the pond-facing side of the building, at the end above Pond 2.</p><p><b>Incubation room:</b> supply water is filtered, sterilized and chilled before it reaches the incubators. (The inside plumbing isn't shown on the flow drawing.)</p>`},
+ {q:'Where does surplus water drain in the incubation room? Where does the water drain to?',s:'normal',src:0,hl:['hatchery','p:eff','V11','p:v11_hw','headbox','p:hdr','upwell','pond3'],
+  a:`<p>Surplus water leaves the incubation room through its floor drains and overflows (not shown on the flow drawing).</p><p><b>Where it goes:</b> effluent leaves the building on the pond side at the Pond Ø end, runs to ${V('V-11')}, and per note *** is <b>diverted to the headwaters at all times</b>. It then rises through the upwell grate into Pond 3, so incubation water is reused in Ponds 3 & 4 before reaching the creek by way of the fish ladder.</p>`},
+ {q:'What is the purpose of filtering and sterilizing the creek water? Why both?',s:'normal',src:0,hl:['hatchery','intake'],
+  a:`<p>Creek water carries <b>sediment</b> and <b>pathogens</b> (bacteria, viruses, fungal spores, parasites) from wild fish upstream. Eggs and alevins are very vulnerable to both.</p><ul><li><b>Filtering</b> removes sediment and particles that smother eggs and clog incubators.</li><li><b>Sterilizing</b> (usually UV) kills the pathogens that filters let through.</li></ul><p><b>Why both:</b> UV light can't reach organisms hidden in cloudy water or shaded by particles, so water has to be filtered first for sterilizing to work. Filtering alone doesn't kill anything.</p>`},
+ {q:'Explain the role of the water chiller in the hatchery.',s:'normal',src:0,hl:['hatchery'],
+  a:`<p>The chiller <b>cools incubation water</b> when creek temperatures run high.</p><ul><li>Egg development speed depends on temperature (tracked as temperature units), so chilling controls hatch and ponding timing.</li><li>Cooler water holds more dissolved oxygen.</li><li>Lower temperatures reduce disease and stress in eggs and alevins.</li></ul>`},
+ {q:'If the Pond Ø pumps died, how do you get water to the outdoor ponds? The incubation room?',s:'pumpfail',src:1,hl:['V7','coupler','p:trash','p:riser','p:to_hatch','p:to_ponds','V6','V5','p:v6','V10','hatchery','pond1','pond2','pond3','pond4'],
+  a:`<p><b>Ponds 3 & 4</b> aren't affected. They keep getting gravity water from Pond Ø through ${V('V-6')} and ${V('V-5')}.</p><p><b>Incubation room and Ponds 1 & 2</b> (drawing Note 2):</p><ul><li>Close ${V('V-7')}.</li><li>Hook a trash pump up to the quick coupler and pump Pond Ø water into the supply riser.</li><li>That line feeds the hatchery and, through ${V('V-3A')} / ${V('V-3B')}, Ponds 1 & 2.</li></ul><p>${V('V-10')} also connects the intake straight to the riser, bypassing Pond Ø.</p>`}
+];
+
+/* ---------- draw base ---------- */
+const base=$('#g-base'), linesG=$('#g-lines'), partsG=$('#g-parts'), ptsG=$('#g-particles');
+const PART_EL={};
+function partGroup(id,parent){const g=el('g',{class:'part','data-id':id,tabindex:'0',role:'button','aria-label':PARTS[id]?PARTS[id].n:id},parent||partsG);el('title',{},g).textContent=PARTS[id]?PARTS[id].n:id;(PART_EL[id]=PART_EL[id]||[]).push(g);return g}
+function label(x,y,t,size,anchor,parent,id){const e=el('text',{x,y,class:'lbl','font-size':Math.round((size||16)*1.25),'text-anchor':anchor||'middle'},parent||base);e.textContent=t;if(id)e.dataset.for=id;return e}
+
+// creek band
+const cg=partGroup('creek',base);
+el('path',{d:'M40 1030 C 300 1022, 520 1034, 800 1028 S 1300 1020, 1560 1036 L1560 1100 L40 1100 Z',class:'creekband shape',stroke:'none'},cg);
+for(let i=0;i<9;i++){const x=110+i*165;el('path',{d:`M${x} 1066 q 14 -8 28 0 t 28 0 t 28 0`,class:'ripple'},cg)}
+label(800,1088,'WHATCOM CREEK  ←  flow',20,'middle',cg);
+
+// hatchery building
+const hb=partGroup('hatchery',base);
+el('rect',{x:812,y:50,width:393,height:140,class:'bldg shape'},hb);
+el('rect',{x:822,y:60,width:373,height:120,fill:'url(#hatchp)'},hb);
+el('rect',{x:880,y:98,width:256,height:44,fill:'var(--bldg)'},hb);
+label(1008,127,'HATCHERY BUILDING',22,'middle',hb);
+
+// pond 0
+const p0=partGroup('pond0',base);
+el('circle',{cx:657,cy:710,r:178,class:'pondshape shape'},p0);
+const sw0=el('g',{class:'spin'},p0);
+el('path',{d:'M 657 560 A 150 150 0 0 1 807 710',class:'swirl'},sw0);el('path',{d:'M 657 860 A 150 150 0 0 1 507 710',class:'swirl'},sw0);
+el('rect',{x:497,y:550,width:320,height:320,fill:'none',stroke:'none'},sw0);
+label(657,640,'POND Ø',22,'middle',p0);
+// ponds 1,2
+[['pond2',1107],['pond1',1418]].forEach(([id,cx])=>{const g=partGroup(id,base);el('circle',{cx,cy:615,r:108,class:'pondshape shape'},g);
+  const s=el('g',{class:'spin rev'},g);el('path',{d:`M ${cx} 525 A 90 90 0 0 1 ${cx+90} 615`,class:'swirl'},s);el('path',{d:`M ${cx} 705 A 90 90 0 0 1 ${cx-90} 615`,class:'swirl'},s);el('rect',{x:cx-92,y:523,width:184,height:184,fill:'none'},s);
+  label(cx,690,id==='pond1'?'POND 1':'POND 2',20,'middle',g);});
+// pond 3 & 4 + channels
+const p3=partGroup('pond3',base);
+el('path',{d:'M640 425 L838 425 L838 470 L660 492 L640 480 Z',class:'pondshape shape'},p3);
+el('path',{d:'M838 425 L862 425 L930 498 L908 514 L838 470 Z',class:'pondshape'},p3);
+label(740,462,'POND 3',20,'middle',p3);
+el('path',{d:'M525 470 L640 438 L640 476 L540 502 Z',class:'pondshape'},base);
+const p4=partGroup('pond4',base);
+el('path',{d:'M330 560 L390 512 L525 470 L540 502 L530 545 L362 600 Z',class:'pondshape shape'},p4);
+label(440,532,'POND 4',20,'middle',p4);
+// ladder
+const ld=partGroup('ladder',base);
+const lpts='325,594 231,640 431,844 387,894';
+el('polyline',{points:lpts,class:'ladderband shape'},ld);el('polyline',{points:lpts,class:'ladderin'},ld);el('polyline',{points:lpts,class:'rungs'},ld);
+label(300,760,'FISH LADDER',17,'end',ld);
+
+/* ---------- lines ---------- */
+const LINE_EL={},ARROW_EL={};
+function dpath(pts){return 'M'+pts.map(p=>p.join(' ')).join(' L')}
+for(const k in PATHS){const p=PATHS[k];
+  const e=el('path',{d:dpath(p.pts),class:'ln '+p.c,'data-p':k},linesG);LINE_EL[k]=e;
+  // arrow at middle of longest segment
+  let best=0,bi=0;for(let i=0;i<p.pts.length-1;i++){const a=p.pts[i],b=p.pts[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(l>best){best=l;bi=i}}
+  const a=p.pts[bi],b=p.pts[bi+1],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;
+  if(best>40){ARROW_EL[k]=el('polygon',{points:'-7,-6 7,0 -7,6',transform:`translate(${mx} ${my}) rotate(${ang})`,class:'arw',fill:`var(--${p.c==='ladder'?'ladder':p.c})`},linesG)}
+}
+
+/* ---------- structures on top of lines ---------- */
+// intake screen
+const it=partGroup('intake');el('rect',{x:1362,y:1034,width:24,height:24,fill:'var(--surface)',stroke:'var(--sup)','stroke-width':3,class:'shape'},it);
+label(1400,1012,'INTAKE SCREEN',15,'start',it);label(1400,1028,'Dupont St Bridge',13,'start',it);
+// pump
+const pu=partGroup('pump');pu.classList.add('pumpwrap');
+el('circle',{cx:657,cy:710,r:22,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2.5,class:'shape'},pu);
+const bl=el('g',{class:'pumpblade'},pu);el('path',{d:'M657 694 L662 710 L657 726 L652 710 Z'},bl);el('path',{d:'M641 710 L657 705 L673 710 L657 715 Z'},bl);
+label(657,756,'POND Ø PUMP',13,'middle',pu);
+// quick coupler
+const qc=partGroup('coupler');el('rect',{x:862,y:752,width:12,height:16,fill:'var(--trash)',stroke:'var(--ink)','stroke-width':1.2,class:'shape'},qc);
+// upwell grate
+const ug=partGroup('upwell');el('rect',{x:906,y:508,width:20,height:20,fill:'var(--surface)',stroke:'var(--pond)','stroke-width':2.5,transform:'rotate(45 916 518)',class:'shape'},ug);
+el('path',{d:'M910 518 h12 M916 512 v12',stroke:'var(--pond)','stroke-width':1.5},ug);
+label(940,548,'UPWELL GRATE',14,'start',ug);
+// headwaters junction
+const hj=partGroup('headbox');el('circle',{cx:907,cy:432,r:12,fill:'var(--surface)',stroke:'var(--pond)','stroke-width':3,class:'shape'},hj);
+label(895,410,'HEADWATERS',13,'end',hj);
+// storm manhole + c street
+const sm=partGroup('storm');el('circle',{cx:968,cy:463,r:11,fill:'var(--surface)',stroke:'var(--drain)','stroke-width':3,class:'shape'},sm);
+const cs=partGroup('cst');el('circle',{cx:808,cy:296,r:11,fill:'var(--surface)',stroke:'var(--drain)','stroke-width':3,class:'shape'},cs);
+label(822,272,'"C" ST STORM DRAIN → creek',14,'start',cs);
+// drop inlets
+[['di2',1022,512],['di1',1335,522]].forEach(([id,x,y])=>{const g=partGroup(id);el('rect',{x:x-11,y:y-11,width:22,height:22,fill:'var(--surface)',stroke:'var(--drain)','stroke-width':2.6,transform:`rotate(45 ${x} ${y})`,class:'shape'},g);
+  for(let i=-1;i<=1;i++)el('line',{x1:x-5+i*3,y1:y-5,x2:x-5+i*3,y2:y+5,stroke:'var(--drain)','stroke-width':1,transform:`rotate(45 ${x} ${y})`},g)});
+// pond 1/2 drain boxes
+[[1107,'pond2'],[1418,'pond1']].forEach(([cx,id])=>{const g=PART_EL[id][0];el('rect',{x:cx-20,y:603,width:40,height:24,rx:2,fill:'var(--surface)',stroke:'var(--pond)','stroke-width':2.5,transform:`rotate(-40 ${cx} 615)`},g)});
+// siphon + fish deposit
+const si=partGroup('siphon');el('rect',{x:468,y:598,width:14,height:14,fill:'var(--surface)',stroke:'var(--pond)','stroke-width':2,class:'shape'},si);label(520,690,'8" SIPHON',13,'start',si);
+const fd=partGroup('fishdep');el('rect',{x:456,y:787,width:20,height:20,fill:'var(--surface)',stroke:'var(--pond)','stroke-width':2.5,transform:'rotate(30 466 797)',class:'shape'},fd);label(450,832,'FISH DEPOSIT',13,'end',fd);
+// north arrow
+const na=el('g',{transform:'translate(1480 160)'},base);el('line',{x1:30,y1:-32,x2:-30,y2:32,stroke:'var(--ink)','stroke-width':2},na);el('polygon',{points:'-30,32 -26,16 -14,26',fill:'var(--ink)'},na);label(-40,58,'N',18,'middle',na);
+
+// valves
+function addValve(id){const [x,y,dx,dy]=VALVES[id];const g=partGroup(id);const p=PATHS[VALVE_PATH[id]];
+  // angle from nearest segment
+  let ang=0,bd=1e9;for(let i=0;i<p.pts.length-1;i++){const a=p.pts[i],b=p.pts[i+1];const t=Math.max(0,Math.min(1,((x-a[0])*(b[0]-a[0])+(y-a[1])*(b[1]-a[1]))/((b[0]-a[0])**2+(b[1]-a[1])**2)));const px=a[0]+t*(b[0]-a[0]),py=a[1]+t*(b[1]-a[1]);const d=Math.hypot(px-x,py-y);if(d<bd){bd=d;ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI}}
+  const sym=el('g',{transform:`translate(${x} ${y}) rotate(${ang})`},g);
+  if(id==='V4'){el('circle',{r:11,class:'vb shape'},sym)}else{el('polygon',{points:'-10,-7 0,0 -10,7',class:'vb'},sym);el('polygon',{points:'10,-7 0,0 10,7',class:'vb'},sym)}
+  el('line',{x1:-6,y1:-10,x2:6,y2:10,class:'vx'},sym);
+  el('circle',{r:16,fill:'transparent'},sym);
+  const tg=el('g',{class:'tag',transform:`translate(${x+dx} ${y+dy})`},g);const w=PARTS[id].n.length*9.6+14;
+  el('rect',{x:0,y:-13,width:w,height:25,rx:12},tg);const t=el('text',{x:w/2,y:5,'text-anchor':'middle'},tg);t.textContent=PARTS[id].n;
+}
+Object.keys(VALVES).forEach(addValve);
+
+/* ---------- state ---------- */
+let scen='normal',active=new Set(),hl=null,selPart=null,curQ=-1;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const sb=$('#scen');
+Object.entries(SCEN).forEach(([k,s])=>{const b=document.createElement('button');b.textContent=s.t;b.dataset.s=k;b.setAttribute('aria-pressed','false');b.onclick=()=>{selPart=null;setScen(k);clearHL();renderSel();zoomTo(FULL)};sb.appendChild(b)});
+
+function setScen(k){scen=k;const s=SCEN[k];active=new Set(s.paths);
+  sb.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));
+  for(const p in LINE_EL){const on=active.has(p);LINE_EL[p].classList.toggle('act',on&&!reduce);LINE_EL[p].classList.toggle('idle',!on);if(ARROW_EL[p])ARROW_EL[p].classList.toggle('idle',!on)}
+  LINE_EL.trash.style.display=s.trash?'':'none';
+  Object.keys(VALVES).forEach(v=>{const o=s.open.includes(v);PART_EL[v][0].querySelectorAll('.vb').forEach(b=>{b.classList.toggle('o',o);b.classList.toggle('c',!o)});PART_EL[v][0].querySelector('.vx').style.display=o?'none':''});
+  const pw=PART_EL.pump[0];pw.classList.toggle('pump-on',!!s.pump);pw.classList.toggle('pump-off',!s.pump);
+  // steps
+  $('#steps').innerHTML=`<h3>${s.t}</h3><p>${s.lead}</p><ol>${s.steps.map(t=>`<li>${t}</li>`).join('')}</ol>`;
+  buildParticles();
+}
+
+/* particles */
+let parts=[];
+function buildParticles(){ptsG.innerHTML='';parts=[];if(reduce)return;
+  active.forEach(k=>{const e=LINE_EL[k];const len=e.getTotalLength();const c=PATHS[k].c;const n=Math.max(2,Math.round(len/55));
+    for(let i=0;i<n;i++){const d=el('circle',{r:c==='ladder'?3.2:4.2,fill:`var(--${c})`,opacity:c==='ladder'?.7:.95},ptsG);parts.push({d,e,len,off:i*len/n,k})}})}
+let t0=performance.now();
+function tick(now){const t=(now-t0)/1000;for(const p of parts){const s=(p.off+t*62)%p.len;const pt=p.e.getPointAtLength(s);p.d.setAttribute('cx',pt.x);p.d.setAttribute('cy',pt.y);
+  const dim=hl&&!hl.has('p:'+p.k);p.d.style.opacity=dim?.25:''}requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+
+/* highlight */
+const svg=$('#dia');
+function applyHL(list){hl=new Set(list);svg.classList.add('dimmed');
+  for(const id in PART_EL){const on=hl.has(id);PART_EL[id].forEach(g=>{g.classList.toggle('hl',on);g.classList.toggle('dim',!on)})}
+  for(const p in LINE_EL){const on=hl.has('p:'+p);LINE_EL[p].classList.toggle('hl',on);LINE_EL[p].classList.toggle('dim',!on);if(ARROW_EL[p])ARROW_EL[p].classList.toggle('dim',!on)}
+}
+function clearHL(){hl=null;svg.classList.remove('dimmed');document.querySelectorAll('.hl,.dim').forEach(e=>e.classList.remove('hl','dim'))}
+
+/* selection card */
+function renderSel(){const box=$('#sel');if(!selPart){box.hidden=true;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));return}
+  const p=PARTS[selPart];let st='';if(VALVES[selPart]){const o=SCEN[scen].open.includes(selPart);st=` · <span class="chip ${o?'o':'c'}">${o?'OPEN':'CLOSED'} in “${SCEN[scen].t}”</span>`}
+  box.innerHTML=`<button class="x" id="selx">Clear</button><div class="k">${p.k}${st}</div><h3>${p.n}</h3><p>${p.d}</p>`;box.hidden=false;
+  $('#selx').onclick=()=>{selPart=null;clearHL();renderSel();zoomTo(FULL)};
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===selPart));
+}
+function pickPart(id){selPart=id;const extra=[id];if(VALVES[id])extra.push('p:'+VALVE_PATH[id]);applyHL(extra);renderSel();setQ(-1,true);if(typeof fitTo==='function'){hint.hidden=true;fitTo([id],VALVES[id]||['coupler','upwell','headbox','pump','storm','cst','di1','di2','siphon','fishdep','intake'].includes(id)?420:520)}}
+for(const id in PART_EL){PART_EL[id].forEach(g=>{g.addEventListener('click',()=>pickPart(id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickPart(id)}})})}
+
+/* talking points */
+const ql=$('#qlist');
+Q.forEach((q,i)=>{const d=document.createElement('div');d.className='q';d.id='q'+(i+1);
+  d.innerHTML=`<button class="qh" aria-expanded="false"><span class="qn">${i+1}</span><span class="qt">${q.q}</span></button><div class="qb" hidden>${q.a}</div>`;
+  ql.appendChild(d);
+  d.querySelector('.qh').onclick=()=>setQ(curQ===i?-1:i);
+});
+function setQ(i,silent){curQ=i;
+  ql.querySelectorAll('.q').forEach((d,j)=>{const on=j===i;d.classList.toggle('on',on);d.querySelector('.qh').setAttribute('aria-expanded',on);d.querySelector('.qb').hidden=!on});
+  if(silent)return;
+  if(i<0){clearHL();zoomTo(FULL);return}
+  selPart=null;renderSel();setScen(Q[i].s);applyHL(Q[i].hl);fitTo(Q[i].hl,520);
+  const d=ql.children[i];setTimeout(()=>d.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'}),30);
+}
+$('#prev').onclick=()=>setQ(curQ<=0?Q.length-1:curQ-1);
+$('#next').onclick=()=>setQ(curQ>=Q.length-1?0:curQ+1);
+
+/* parts tab */
+const pp=$('#pane-p');const groups={};for(const id in PARTS){(groups[PARTS[id].g]=groups[PARTS[id].g]||[]).push(id)}
+const gOrder=['Source','Ponds','Structures','Valves','Drains'];
+pp.innerHTML=gOrder.map(g=>`<h4>${g==='Source'?'Water source':g}</h4><div class="plist">${groups[g].map(id=>{const k=PARTS[id].k;const col=k==='Valve'?'var(--open)':k==='Pond'?'var(--water-edge)':k==='Drain'?'var(--drain)':k==='Water source'?'var(--sup)':'var(--pond)';return `<button class="pbtn" data-id="${id}"><span class="dot" style="background:${col}"></span>${PARTS[id].n}</button>`}).join('')}</div>`).join('');
+pp.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(PART_EL[id])pickPart(id);else{selPart=id;clearHL();renderSel()}});
+
+/* tabs */
+const tq=$('#tab-q'),tp=$('#tab-p');
+function tab(w){tq.setAttribute('aria-selected',w==='q');tp.setAttribute('aria-selected',w==='p');$('#pane-q').hidden=w!=='q';$('#pane-p').hidden=w!=='p'}
+tq.onclick=()=>tab('q');tp.onclick=()=>tab('p');
+
+/* ---------- zoom & pan ---------- */
+const FULL={x:40,y:40,w:1520,h:1060},AR=FULL.w/FULL.h;
+let vb={...FULL},anim=null;
+function setVB(v){vb=v;svg.setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`);svg.classList.toggle('zoomed',v.w<FULL.w-1)}
+function clampVB(v){const w=Math.min(FULL.w,Math.max(160,v.w)),h=w/AR;let x=Math.min(Math.max(v.x,FULL.x),FULL.x+FULL.w-w),y=Math.min(Math.max(v.y,FULL.y),FULL.y+FULL.h-h);return{x,y,w,h}}
+function zoomTo(t){t=clampVB(t);cancelAnimationFrame(anim);if(reduce){setVB(t);return}
+  const s0={...vb},t0=performance.now(),D=550;
+  const step=now=>{const k=Math.min(1,(now-t0)/D),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+    setVB({x:s0.x+(t.x-s0.x)*e,y:s0.y+(t.y-s0.y)*e,w:s0.w+(t.w-s0.w)*e,h:s0.h+(t.h-s0.h)*e});if(k<1)anim=requestAnimationFrame(step)};
+  anim=requestAnimationFrame(step)}
+function bboxOf(ids){let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  const add=b=>{x1=Math.min(x1,b.x);y1=Math.min(y1,b.y);x2=Math.max(x2,b.x+b.width);y2=Math.max(y2,b.y+b.height)};
+  ids.forEach(id=>{if(id.startsWith('p:')){const e=LINE_EL[id.slice(2)];if(e)add(e.getBBox())}else if(PART_EL[id]&&id!=='creek')PART_EL[id].forEach(g=>add(g.getBBox()))});
+  return x2>x1?{x:x1,y:y1,w:x2-x1,h:y2-y1}:null}
+function fitTo(ids,minW){const b=bboxOf(ids);if(!b){zoomTo(FULL);return}
+  const pad=50;let w=Math.max(b.w+pad*2,(b.h+pad*2)*AR,minW);const cx=b.x+b.w/2,cy=b.y+b.h/2;zoomTo({x:cx-w/2,y:cy-w/AR/2,w,h:w/AR})}
+function zoomBy(f,cx,cy){if(cx===undefined){cx=vb.x+vb.w/2;cy=vb.y+vb.h/2}
+  const w=Math.min(FULL.w,Math.max(160,vb.w*f)),h=w/AR;zoomTo({x:cx-(cx-vb.x)*w/vb.w,y:cy-(cy-vb.y)*h/vb.h,w,h})}
+$('#zin').onclick=()=>zoomBy(.6);$('#zout').onclick=()=>zoomBy(1/.6);$('#zfit').onclick=()=>zoomTo(FULL);
+// pointer pan + pinch
+const ptrs=new Map();let dragged=false,start=null,pinch=null;
+function toSvg(cx,cy){const r=svg.getBoundingClientRect();return{x:vb.x+(cx-r.left)/r.width*vb.w,y:vb.y+(cy-r.top)/r.height*vb.h,r}}
+svg.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});dragged=false;cancelAnimationFrame(anim);
+  if(ptrs.size===1)start={cx:e.clientX,cy:e.clientY,vb:{...vb}};
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),vb:{...vb},mid:toSvg((a.x+b.x)/2,(a.y+b.y)/2)}}});
+svg.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);const f=pinch.d/d;const w=Math.min(FULL.w,Math.max(160,pinch.vb.w*f)),h=w/AR;const m=pinch.mid;
+    setVB(clampVB({x:m.x-(m.x-pinch.vb.x)*w/pinch.vb.w,y:m.y-(m.y-pinch.vb.y)*h/pinch.vb.h,w,h}));dragged=true;return}
+  if(start&&vb.w<FULL.w-1){const dx=e.clientX-start.cx,dy=e.clientY-start.cy;if(!dragged&&Math.hypot(dx,dy)<6)return;
+    if(!dragged){dragged=true;svg.setPointerCapture(e.pointerId);svg.classList.add('dragging')}
+    const r=svg.getBoundingClientRect();setVB(clampVB({x:start.vb.x-dx/r.width*start.vb.w,y:start.vb.y-dy/r.height*start.vb.h,w:start.vb.w,h:start.vb.h}))}});
+const endPtr=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){start=null;svg.classList.remove('dragging')}};
+svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',endPtr);
+svg.addEventListener('click',e=>{if(dragged){e.stopPropagation();e.preventDefault();dragged=false}},true);
+svg.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey||vb.w<FULL.w-1))return;e.preventDefault();const p=toSvg(e.clientX,e.clientY);zoomBy(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
+const hint=$('#zhint');svg.addEventListener('pointerdown',()=>{hint.hidden=true},{once:true});
+
+setScen('normal');
+const h=(location.hash||'').match(/^#q(\d+)$/);if(h&&+h[1]>=1&&+h[1]<=12)setQ(+h[1]-1);
+})();
+</script>
+</body>
+</html>
