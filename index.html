@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Animated Whatcom Creek Hatchery flow diagram with tour talking points, part and valve close-ups, and operating scenarios.">
+<meta name="description" content="Animated hatchery flow diagram with tour talking points, part and valve close-ups, and operating scenarios.">
 <title>BTC Hatchery Flow 1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,7 +110,11 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
 .pbtn:hover{border-color:var(--accent)}
 .pbtn.on{border-color:var(--accent);background:var(--accent-soft)}
 .pbtn .dot{width:9px;height:9px;border-radius:50%;flex:none}
-.foot{font-size:12.5px;color:var(--muted);margin-top:18px;max-width:80ch}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.themebtn{display:inline-flex;align-items:center;gap:8px;font:700 15px var(--f-body);background:var(--surface);color:var(--ink);border:1.5px solid var(--ink);border-radius:20px;padding:6px 14px;cursor:pointer}
+.themebtn:hover{border-color:var(--accent);color:var(--accent)}
+.themebtn .ti{width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:inset -5px -3px 0 0 var(--surface)}
+footer.site{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);font-size:15px;color:var(--muted);text-align:center}
 /* svg */
 .ln{fill:none;stroke-width:3.4;stroke-dasharray:11 7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s}
 .ln.sup{stroke:var(--sup)}.ln.pond{stroke:var(--pond)}.ln.drain{stroke:var(--drain)}.ln.trash{stroke:var(--trash);stroke-dasharray:4 5;stroke-width:4}
@@ -159,6 +163,7 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
   .legend{display:none}
   .scen button{font-size:13.5px;padding:4px 9px}
   .sheet{text-align:left}
+  .hright{align-items:flex-start}
 }
 </style>
 </head>
@@ -166,10 +171,13 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow">Whatcom Creek Hatchery · Tour guide</div>
+      <div class="eyebrow">Tour guide</div>
       <h1>BTC Hatchery Flow <span>1.0</span></h1>
     </div>
-    <div class="sheet">Based on Wilson Engineering<br>Hatchery Flow Diagram · Job 2011‑111 · Mar 2013</div>
+    <div class="hright">
+      <button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark mode"><span class="ti" aria-hidden="true"></span><span class="tl">Dark mode</span></button>
+      <div class="sheet">Based on Wilson Engineering<br>Hatchery Flow Diagram · Job 2011‑111 · Mar 2013</div>
+    </div>
   </header>
 
   <div class="grid">
@@ -220,6 +228,7 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
       <div id="pane-p" role="tabpanel" aria-labelledby="tab-p" class="parts" hidden></div>
     </section>
   </div>
+  <footer class="site">Created by Michael Stocklin 2026</footer>
 </div>
 
 <script>
@@ -574,6 +583,15 @@ svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',en
 svg.addEventListener('click',e=>{if(dragged){e.stopPropagation();e.preventDefault();dragged=false}},true);
 svg.addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey||vb.w<FULL.w-1))return;e.preventDefault();const p=toSvg(e.clientX,e.clientY);zoomBy(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
 const hint=$('#zhint');svg.addEventListener('pointerdown',()=>{hint.hidden=true},{once:true});
+
+/* ---------- light / dark ---------- */
+const root=document.documentElement,tb=$('#themebtn');
+const isDark=()=>root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+function paintThemeBtn(){const d=isDark();tb.querySelector('.tl').textContent=d?'Light mode':'Dark mode';tb.setAttribute('aria-label',d?'Switch to light mode':'Switch to dark mode')}
+try{const t=localStorage.getItem('btc-theme');if(t==='dark'||t==='light')root.dataset.theme=t}catch(e){}
+paintThemeBtn();
+tb.onclick=()=>{const t=isDark()?'light':'dark';root.dataset.theme=t;try{localStorage.setItem('btc-theme',t)}catch(e){}paintThemeBtn()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',paintThemeBtn);
 
 setScen('normal');
 const h=(location.hash||'').match(/^#q(\d+)$/);if(h&&+h[1]>=1&&+h[1]<=12)setQ(+h[1]-1);
