@@ -114,6 +114,18 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
 .themebtn{display:inline-flex;align-items:center;gap:8px;font:700 15px var(--f-body);background:var(--surface);color:var(--ink);border:1.5px solid var(--ink);border-radius:20px;padding:6px 14px;cursor:pointer}
 .themebtn:hover{border-color:var(--accent);color:var(--accent)}
 .themebtn .ti{width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:inset -5px -3px 0 0 var(--surface)}
+.notes{margin-top:14px;border-top:1px dashed var(--rule);padding-top:10px}
+.notes label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:700;font-size:15px}
+.notes .st{font-weight:400;font-size:13.5px;color:var(--open)}
+.notes textarea{width:100%;min-height:84px;margin-top:6px;font:inherit;font-size:16px;line-height:1.5;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:4px;padding:8px 10px;resize:vertical}
+.notes textarea:focus{border-color:var(--accent);outline:none}
+.hasnote{display:inline-block;margin-left:8px;font:700 11px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 5px;vertical-align:middle}
+.pbtn .hasnote{margin-left:auto;font-size:10px}
+.tools{flex-wrap:wrap;justify-content:space-between!important;align-items:center}
+.notetools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.notetools button{font:700 14px var(--f-body);border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:3px;padding:6px 12px;cursor:pointer}
+.notetools button:hover{border-color:var(--accent)}
+.notetools .msg{font-size:13.5px;color:var(--open)}
 footer.site{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);font-size:15px;color:var(--muted);text-align:center}
 /* svg */
 .ln{fill:none;stroke-width:3.4;stroke-dasharray:11 7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s}
@@ -221,6 +233,7 @@ footer.site{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);fo
       </div>
       <div id="pane-q" role="tabpanel" aria-labelledby="tab-q">
         <div class="tools" style="margin-bottom:10px">
+          <div class="notetools"><button id="copynotes" type="button">Copy all notes</button><button id="dlnotes" type="button">Download notes</button><span class="msg" id="notemsg" aria-live="polite"></span></div>
           <div class="nav"><button id="prev">← Prev</button><button id="next">Next →</button></div>
         </div>
         <div class="qlist" id="qlist"></div>
@@ -512,18 +525,45 @@ function clearHL(){hl=null;svg.classList.remove('dimmed');document.querySelector
 /* selection card */
 function renderSel(){const box=$('#sel');if(!selPart){box.hidden=true;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));return}
   const p=PARTS[selPart];let st='';if(VALVES[selPart]){const o=SCEN[scen].open.includes(selPart);st=` · <span class="chip ${o?'o':'c'}">${o?'OPEN':'CLOSED'} in “${SCEN[scen].t}”</span>`}
-  box.innerHTML=`<button class="x" id="selx">Clear</button><div class="k">${p.k}${st}</div><h3>${p.n}</h3><p>${p.d}</p>`;box.hidden=false;
+  box.innerHTML=`<button class="x" id="selx">Clear</button><div class="k">${p.k}${st}</div><h3>${p.n}</h3><p>${p.d}</p>${notesBox('part-'+selPart,'My notes on '+p.n)}`;box.hidden=false;wireNotes(box);
   $('#selx').onclick=()=>{selPart=null;clearHL();renderSel();zoomTo(FULL)};
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===selPart));
 }
 function pickPart(id){selPart=id;const extra=[id];if(VALVES[id])extra.push('p:'+VALVE_PATH[id]);applyHL(extra);renderSel();setQ(-1,true);if(typeof fitTo==='function'){hint.hidden=true;fitTo([id],VALVES[id]||['coupler','upwell','headbox','pump','storm','cst','di1','di2','siphon','fishdep','intake'].includes(id)?420:520)}}
 for(const id in PART_EL){PART_EL[id].forEach(g=>{g.addEventListener('click',()=>pickPart(id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickPart(id)}})})}
 
+/* ---------- notes (saved in this browser) ---------- */
+const NK='btcflow-note-';
+const NOTES={get(k){try{return localStorage.getItem(NK+k)||''}catch(e){return ''}},
+  set(k,v){try{if(v.trim())localStorage.setItem(NK+k,v);else localStorage.removeItem(NK+k);return true}catch(e){return false}}};
+const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function notesBox(key,label){const v=NOTES.get(key);
+  return `<div class="notes"><label for="n-${key}">${label}<span class="st" aria-live="polite">${v?'Saved':''}</span></label><textarea id="n-${key}" data-key="${key}" placeholder="Type your notes here. They save automatically.">${esc(v)}</textarea></div>`}
+function wireNotes(root){root.querySelectorAll('.notes textarea').forEach(ta=>{let t;const st=ta.parentElement.querySelector('.st');
+  ta.addEventListener('input',()=>{st.textContent='Saving…';clearTimeout(t);t=setTimeout(()=>{st.textContent=NOTES.set(ta.dataset.key,ta.value)?(ta.value.trim()?'Saved':''):'Could not save in this browser';markNotes()},400)})})}
+function markNotes(){
+  document.querySelectorAll('.q').forEach((d,i)=>{const t=d.querySelector('.qt');let m=t.querySelector('.hasnote');const has=!!NOTES.get('q'+(i+1));
+    if(has&&!m){m=document.createElement('span');m.className='hasnote';m.textContent='Notes';t.appendChild(m)}else if(!has&&m)m.remove()});
+  document.querySelectorAll('.pbtn').forEach(b=>{let m=b.querySelector('.hasnote');const has=!!NOTES.get('part-'+b.dataset.id);
+    if(has&&!m){m=document.createElement('span');m.className='hasnote';m.textContent='Notes';b.appendChild(m)}else if(!has&&m)m.remove()})}
+function allNotesText(){const out=['BTC Hatchery Flow 1.0 — My notes',''];let n=0;
+  Q.forEach((q,i)=>{const v=NOTES.get('q'+(i+1));if(v){n++;out.push(`${i+1}. ${q.q}`,v,'')}});
+  Object.keys(PARTS).forEach(id=>{const v=NOTES.get('part-'+id);if(v){n++;out.push(`${PARTS[id].n} (${PARTS[id].k})`,v,'')}});
+  return n?out.join('\n'):''}
+const nmsg=$('#notemsg');let nmT;const flash=t=>{nmsg.textContent=t;clearTimeout(nmT);nmT=setTimeout(()=>nmsg.textContent='',3500)};
+$('#copynotes').onclick=()=>{const t=allNotesText();if(!t){flash('No notes yet');return}
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');flash('Copied')}catch(e){flash('Select and copy manually')}ta.remove()};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>flash('Copied'),fallback);else fallback()};
+const dl=$('#dlnotes');let framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+if(framed)dl.hidden=true;
+dl.onclick=()=>{const t=allNotesText();if(!t){flash('No notes yet');return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download='hatchery-notes.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);flash('Downloaded')};
+
 /* talking points */
 const ql=$('#qlist');
 Q.forEach((q,i)=>{const d=document.createElement('div');d.className='q';d.id='q'+(i+1);
-  d.innerHTML=`<button class="qh" aria-expanded="false"><span class="qn">${i+1}</span><span class="qt">${q.q}</span></button><div class="qb" hidden>${q.a}</div>`;
-  ql.appendChild(d);
+  d.innerHTML=`<button class="qh" aria-expanded="false"><span class="qn">${i+1}</span><span class="qt">${q.q}</span></button><div class="qb" hidden>${q.a}${notesBox('q'+(i+1),'My notes')}</div>`;
+  ql.appendChild(d);wireNotes(d);
   d.querySelector('.qh').onclick=()=>setQ(curQ===i?-1:i);
 });
 function setQ(i,silent){curQ=i;
@@ -593,6 +633,7 @@ paintThemeBtn();
 tb.onclick=()=>{const t=isDark()?'light':'dark';root.dataset.theme=t;try{localStorage.setItem('btc-theme',t)}catch(e){}paintThemeBtn()};
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',paintThemeBtn);
 
+markNotes();
 setScen('normal');
 const h=(location.hash||'').match(/^#q(\d+)$/);if(h&&+h[1]>=1&&+h[1]<=12)setQ(+h[1]-1);
 })();
