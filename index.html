@@ -33,6 +33,7 @@
   --water:#2b3d3b; --water-edge:#a9bdb8; --bldg:#1d2a28; --creek:#24465a;
   --open:#4cc28e; --closed:#6c7d79; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;margin:0}
 .wrap{max-width:1500px;margin:0 auto;padding-inline:20px;padding-block:18px 40px}
 header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;padding-bottom:14px;border-bottom:2px solid var(--ink);margin-bottom:16px}
@@ -126,6 +127,26 @@ textarea{width:100%;min-height:62px;font:inherit;font-size:13.5px;border:1px sol
 .notetools button{font:700 14px var(--f-body);border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:3px;padding:6px 12px;cursor:pointer}
 .notetools button:hover{border-color:var(--accent)}
 .notetools .msg{font-size:13.5px;color:var(--open)}
+.pic{margin:10px 0 4px}
+.picbtn{all:unset;display:block;width:100%;cursor:zoom-in;border-radius:10px;border:1.5px solid var(--ink);overflow:hidden;line-height:0}
+.picbtn:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.photo{position:relative;display:block;line-height:0}
+.photo img{display:block;width:100%;height:auto}
+.photo svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lb .photo{display:inline-block;max-width:100%}
+.lb .photo img{width:auto;max-width:100%;max-height:74vh}
+#lbpic{text-align:center}
+.picviews{display:flex;gap:6px;margin-bottom:8px}
+.picviews button{font:700 14px var(--f-body);border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:3px;padding:5px 12px;cursor:pointer}
+.picviews button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.pic figcaption{font-size:14.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.haspic{display:inline-block;margin-left:6px;font:700 10px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--sup);border:1px solid var(--sup);border-radius:3px;padding:1px 5px}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(8,14,13,.82);display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.lbin{width:min(1200px,100%);max-height:100%;overflow:auto;background:var(--surface);color:var(--ink);border-radius:8px;padding:14px}
+.lbhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.lbhead h3{margin:0;font-size:20px}
+.lbx{font:700 15px var(--f-body);border:1.5px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:4px;padding:6px 14px;cursor:pointer}
+.lbcap{margin:10px 0 0;font-size:16px}
 footer.site{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);font-size:15px;color:var(--muted);text-align:center}
 /* svg */
 .ln{fill:none;stroke-width:3.4;stroke-dasharray:11 7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s}
@@ -241,6 +262,8 @@ footer.site{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);fo
       <div id="pane-p" role="tabpanel" aria-labelledby="tab-p" class="parts" hidden></div>
     </section>
   </div>
+  <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-labelledby="lbt"><div class="lbin"><div class="lbhead"><h3 id="lbt"></h3><button class="lbx" id="lbx" type="button">Close</button></div><div id="lbpic"></div><p class="lbcap" id="lbcap"></p></div></div>
+  
   <footer class="site">Created by Michael Stocklin 2026</footer>
 </div>
 
@@ -260,10 +283,11 @@ const PATHS={
  trash:{c:'trash',pts:[[792,742],[868,760]]},
  riser:{c:'sup',pts:[[900,770],[900,600]]},
  to_hatch:{c:'sup',pts:[[900,600],[918,560],[1060,360],[1107,300],[1107,190]]},
- to_ponds:{c:'sup',pts:[[900,600],[1040,745],[1235,745]]},
- v3b:{c:'sup',pts:[[1040,745],[1095,705]]},
- v3a:{c:'sup',pts:[[1235,745],[1335,665]]},
- v6:{c:'pond',pts:[[790,712],[850,730],[884,736],[884,590],[897,567],[914,530]]},
+ to_ponds:{c:'pond',pts:[[884,612],[1040,745],[1235,745]]},
+ v3b:{c:'pond',pts:[[1040,745],[1095,705]]},
+ v3a:{c:'pond',pts:[[1235,745],[1335,665]]},
+ v6a:{c:'pond',pts:[[790,712],[850,730],[884,736],[884,612]]},
+ v5:{c:'pond',pts:[[884,612],[884,590],[897,567],[914,530]]},
  hdr:{c:'pond',pts:[[907,432],[917,508]]},
  p2_v4:{c:'pond',pts:[[1107,615],[1252,745]]},
  p1_v4:{c:'pond',pts:[[1418,615],[1252,745]]},
@@ -288,14 +312,14 @@ const PATHS={
 const PARTS={
  creek:{n:'Whatcom Creek',k:'Water source',d:'The hatchery\'s water source. Creek water is taken in upstream at the Dupont Street Bridge, and every drain line (V-4, V-12, V-14, the fish ladder and the storm drain) returns water to the creek downstream.',g:'Source'},
  intake:{n:'Intake screen',k:'Water source',d:'Screened intake in Whatcom Creek under the Dupont Street Bridge. All creek water for the facility enters here and runs by gravity through the supply line. The air burst system keeps this screen clear.',g:'Source'},
- pond0:{n:'Pond Ø (Pond 0)',k:'Pond',d:'Large elevated head pond. Holds creek water as a reservoir for the hatchery pump, and feeds Ponds 3 & 4 by gravity through V-6 / V-5 and the 8" siphon.',g:'Ponds'},
- pump:{n:'Pond Ø pump',k:'Pump',d:'Pumps from the center of Pond Ø through V-7 into the supply line that serves the hatchery building and Ponds 1 & 2.',g:'Structures'},
+ pond0:{n:'Pond Ø (Pond 0)',k:'Pond',d:'Large elevated head pond. Its pump (V-7) supplies the hatchery building. By gravity, water leaves through V-6 and splits just before V-5: one branch feeds Ponds 1 & 2, the other goes through V-5 to the Pond 3 headbox. The 8" siphon also links it to Pond 4.',g:'Ponds'},
+ pump:{n:'Pond Ø pump',k:'Pump',d:'Pumps from the center of Pond Ø through V-7 up the supply riser to the hatchery building. It serves only the hatchery building; the outdoor ponds are fed by gravity through V-6.',g:'Structures'},
  coupler:{n:'Quick coupler (trash pump)',k:'Fitting',d:'Hose connection on the pump line just past V-7. If the hatchery pump is inoperable, V-7 is closed and a trash pump is hooked up here (drawing Note 2).',g:'Structures'},
- pond1:{n:'Pond 1',k:'Pond',d:'Round rearing pond. Filled from the supply line through V-3A. Its center drain box sends water either to V-4 (to the creek) or through V-2A to the headwaters.',g:'Ponds'},
- pond2:{n:'Pond 2',k:'Pond',d:'Round rearing pond. Filled from the supply line through V-3B. Its center drain box sends water either to V-4 (to the creek) or through V-2B to the headwaters.',g:'Ponds'},
+ pond1:{n:'Pond 1',k:'Pond',d:'Round rearing pond. Filled by gravity from the V-6 line out of Pond Ø, through V-3A. Its center drain box sends water either to V-4 (to the creek) or through V-2A to the headwaters.',g:'Ponds'},
+ pond2:{n:'Pond 2',k:'Pond',d:'Round rearing pond. Filled by gravity from the V-6 line out of Pond Ø, through V-3B. Its center drain box sends water either to V-4 (to the creek) or through V-2B to the headwaters.',g:'Ponds'},
  pond3:{n:'Pond 3',k:'Pond',d:'Raceway pond fed from below through the upwell grate at its head. Water flows on into Pond 4.',g:'Ponds'},
  pond4:{n:'Pond 4',k:'Pond',d:'Lower raceway pond. It connects to the fish ladder, so returning adults climb from the creek into Pond 4. The 8" siphon and fish deposit line also enter here.',g:'Ponds'},
- upwell:{n:'Upwell grate',k:'Structure',d:'Inlet at the head of Pond 3 where water wells up from below. Both the headwaters junction and the Pond Ø gravity line (V-5) discharge here.',g:'Structures'},
+ upwell:{n:'Upwell grate (Pond 3 headbox)',k:'Structure',d:'Headbox at the head of Pond 3 where water wells up from below. Fed by the Pond Ø gravity line through V-5, and by the headwaters junction (Ponds 1 & 2 outflow and hatchery effluent).',g:'Structures'},
  headbox:{n:'Headwaters junction',k:'Structure',d:'Collection point for water heading to the upwell grate: Pond 1 (V-2A), Pond 2 (V-2B) and hatchery effluent (V-11).',g:'Structures'},
  ladder:{n:'Fish ladder',k:'Structure',d:'Stepped channel from Pond 4 down to Whatcom Creek. Water leaving Ponds 3 & 4 runs down the ladder, and that flow attracts returning adult salmon up into the ponds.',g:'Structures'},
  siphon:{n:'8" siphon',k:'Pipe',d:'Siphon line between Pond Ø and Pond 4, controlled by V-13. It is primed through the quick coupler beside V-13.',g:'Structures'},
@@ -306,15 +330,15 @@ const PARTS={
  di2:{n:'Drop inlet, Pond 2',k:'Drain',d:'Overflow inlet at the rim of Pond 2 that leads to the storm drain manhole. Its valve V-1B stays closed.',g:'Drains'},
  storm:{n:'Storm drain manhole',k:'Drain',d:'Collects drop-inlet water from Ponds 1 & 2 and sends it to the "C" Street storm drain, which empties to the creek.',g:'Drains'},
  cst:{n:'"C" Street storm drain',k:'Drain',d:'City storm drain that carries water from the storm manhole to the creek.',g:'Drains'},
- V0:{n:'V-Ø',k:'Valve',d:'Main intake valve beside the intake screen. Controls all creek water entering the system.',g:'Valves'},
+ V0:{n:'V-Ø',k:'Valve',d:'Main intake valve beside the intake screen. Controls all creek water entering the system. It is a gate valve with a gear operator; open or close it by fitting a valve key onto the square operating nut on the side of the gear box.',g:'Valves'},
  V9:{n:'V-9',k:'Valve',d:'Fills Pond Ø from the creek supply line. Closed when draining Pond Ø (Note 1).',g:'Valves'},
- V10:{n:'V-10',k:'Valve',d:'Bypass from the creek supply line straight into the hatchery supply riser, skipping Pond Ø. Opened when draining Pond Ø (Note 1) so the hatchery and Ponds 1 & 2 keep getting water.',g:'Valves'},
- V7:{n:'V-7',k:'Valve',d:'Pump discharge valve. Controls water sent from the Pond Ø pump to the hatchery. Closed when the pump fails so a trash pump can be connected at the quick coupler (Note 2).',g:'Valves'},
+ V10:{n:'V-10',k:'Valve',d:'Bypass from the creek supply line straight into the hatchery supply riser, skipping Pond Ø. Opened when draining Pond Ø (Note 1) so the hatchery building keeps getting water.',g:'Valves'},
+ V7:{n:'V-7',k:'Valve',d:'Pump discharge valve on the Pond Ø pump line. Feeds only the hatchery building. Closed when the pump fails so a trash pump can be connected at the quick coupler (Note 2).',g:'Valves'},
  V8:{n:'V-8',k:'Valve',d:'Abandoned (drawing note ****). Located in the Pond Ø valve cluster beside V-7. Not used.',g:'Valves',nos:1},
- V6:{n:'V-6',k:'Valve',d:'Gravity line from Pond Ø to the upwell grate in Pond 3. Closed when draining Pond Ø (Note 1).',g:'Valves'},
- V5:{n:'V-5',k:'Valve',d:'Last valve before the upwell grate on the Pond Ø gravity line.',g:'Valves'},
- V3A:{n:'V-3A',k:'Valve',d:'Supply valve that fills Pond 1.',g:'Valves'},
- V3B:{n:'V-3B',k:'Valve',d:'Supply valve that fills Pond 2.',g:'Valves'},
+ V6:{n:'V-6',k:'Valve',d:'Main gravity outlet from Pond Ø. Just before V-5 the line splits: one branch feeds Ponds 1 & 2 (through V-3A / V-3B), the other goes through V-5 to the Pond 3 headbox. Closed when draining Pond Ø (Note 1). Its valve box is hidden in the taller grass to the right of the other Pond Ø valve boxes.',g:'Valves'},
+ V5:{n:'V-5',k:'Valve',d:'Controls flow to the Pond 3 headbox (upwell grate). It sits just past the split where the Pond 1 & 2 line branches off the V-6 gravity line.',g:'Valves'},
+ V3A:{n:'V-3A',k:'Valve',d:'Fills Pond 1 from the V-6 gravity line.',g:'Valves'},
+ V3B:{n:'V-3B',k:'Valve',d:'Fills Pond 2 from the V-6 gravity line.',g:'Valves'},
  V2A:{n:'V-2A',k:'Valve',d:'Sends Pond 1 water to the headwaters junction and on to the upwell grate in Pond 3.',g:'Valves'},
  V2B:{n:'V-2B',k:'Valve',d:'Sends Pond 2 water to the headwaters junction and on to the upwell grate in Pond 3.',g:'Valves'},
  V4:{n:'V-4',k:'Valve',d:'Common drain for Ponds 1 & 2. Sends their outflow straight to Whatcom Creek.',g:'Valves'},
@@ -334,26 +358,26 @@ const VALVES={
  V2A:[1370,529,14,6], V11:[1070,468,14,-10], V12:[247,591,-60,-34], V13:[444,590,16,-20], V14:[606,880,16,18],
  V1A:[1300,505,-14,-34], V1B:[1004,496,-74,-22]
 };
-const VALVE_PATH={V0:'in_main',V9:'in_v9',V10:'v10',V7:'pump',V6:'v6',V5:'v6',V3B:'v3b',V3A:'v3a',V4:'v4_creek',V2B:'p2_hw',V2A:'p1_hw',V11:'eff',V12:'v12',V13:'siphon',V14:'v14',V1A:'di1_storm',V1B:'di2_storm'};
+const VALVE_PATH={V0:'in_main',V9:'in_v9',V10:'v10',V7:'pump',V6:'v6a',V5:'v5',V3B:'v3b',V3A:'v3a',V4:'v4_creek',V2B:'p2_hw',V2A:'p1_hw',V11:'eff',V12:'v12',V13:'siphon',V14:'v14',V1A:'di1_storm',V1B:'di2_storm'};
 
 /* ---------- scenarios ---------- */
-const NORMAL=['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','v6','hdr','p1_v4','p2_v4','v4_creek','eff','v11_hw','raceway','ladder'];
+const NORMAL=['in_main','in_v9','pump','riser','to_hatch','v6a','to_ponds','v3a','v3b','v5','hdr','p1_v4','p2_v4','v4_creek','eff','v11_hw','raceway','ladder'];
 const SCEN={
  normal:{t:'Normal operation',open:['V0','V9','V7','V6','V5','V3A','V3B','V4','V11'],paths:NORMAL,pump:1,
-   lead:'Creek water fills Pond Ø. The pump lifts it to the hatchery and Ponds 1 & 2, while Pond Ø also feeds Ponds 3 & 4 by gravity.',
-   steps:['Creek water enters the intake screen and passes V-Ø.','V-9 fills Pond Ø; V-10 bypass stays closed.','The Pond Ø pump sends water through V-7 up the supply riser to the hatchery and, through V-3A / V-3B, to Ponds 1 & 2.','Pond Ø gravity-feeds the upwell grate in Pond 3 through V-6 and V-5.','Hatchery effluent goes through V-11 to the headwaters (Note ***). Ponds 1 & 2 drain through V-4 to the creek.','Ponds 3 & 4 overflow down the fish ladder to the creek.']},
- spawn:{t:'Spawning season',open:['V0','V9','V7','V6','V5','V3A','V3B','V2A','V2B','V11'],paths:['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','v6','hdr','p1_hw','p2_hw','eff','v11_hw','raceway','ladder'],pump:1,flag:1,
-   lead:'Ponds 1 & 2 are filled and their outflow is sent to the headwaters instead of the creek, adding flow to Ponds 3 & 4 and the fish ladder.',
-   steps:['Fill Ponds 1 & 2 through V-3A and V-3B.','Close V-4 so pond water doesn\'t go straight to the creek.','Open V-2A and V-2B to send Pond 1 & 2 water to the headwaters junction.','Combined water rises through the upwell grate into Pond 3 and moves through Pond 4.','Extra flow down the fish ladder draws returning adults up into Pond 4.']},
- drain0:{t:'Drain Pond Ø',open:['V0','V10','V14','V5','V3A','V3B','V4','V11'],paths:['in_main','v10','riser','to_hatch','to_ponds','v3a','v3b','v14','p1_v4','p2_v4','v4_creek','eff','v11_hw','hdr','raceway','ladder'],pump:0,
-   lead:'Drawing Note 1. Creek water bypasses Pond Ø through V-10 so the hatchery keeps its supply while Pond Ø empties through the standpipe.',
-   steps:['Open V-10 so creek water goes straight to the supply riser.','Open V-14 to drain Pond Ø through its standpipe to the creek.','Close V-9 so creek water stops filling Pond Ø.','Close V-6 so Pond Ø stops feeding the upwell grate.']},
- pumpfail:{t:'Pump failure',open:['V0','V9','V6','V5','V3A','V3B','V4','V11'],paths:NORMAL.filter(p=>p!=='pump').concat(['trash']),pump:0,trash:1,flag:1,
-   lead:'Drawing Note 2. With the hatchery pump down, a trash pump at the quick coupler takes over. Ponds 3 & 4 keep running on gravity from Pond Ø.',
-   steps:['Close V-7 to isolate the dead pump.','Hook a trash pump up to the quick coupler and draw from Pond Ø.','Trash pump water fills the supply riser, reaching the hatchery and Ponds 1 & 2 (V-3A / V-3B).','Ponds 3 & 4 still get gravity flow from Pond Ø through V-6 and V-5.']},
- drain34:{t:'Drain Ponds 3 & 4',open:['V0','V9','V7','V3A','V3B','V4','V11','V12'],paths:['in_main','in_v9','pump','riser','to_hatch','to_ponds','v3a','v3b','p1_v4','p2_v4','v4_creek','eff','v11_hw','hdr','v12'],pump:1,flag:1,
-   lead:'Inputs to Pond 3 are shut and V-12, at the head of the fish ladder, sends pond water to the creek.',
-   steps:['Close V-6 / V-5 to stop gravity flow from Pond Ø (and keep V-2A, V-2B, V-13 closed).','Lift the diamond plate over V-12 (Note 3: valves sit under diamond plate).','Open V-12 to drain Ponds 3 & 4 straight to Whatcom Creek.']}
+   lead:'Creek water fills Pond Ø. The pump sends water through V-7 to the hatchery building only. Gravity carries water out through V-6; the line splits just before V-5 to feed Ponds 1 & 2 and, through V-5, the Pond 3 headbox.',
+   steps:['Creek water enters the intake screen and passes V-Ø.','V-9 fills Pond Ø; the V-10 bypass stays closed.','The Pond Ø pump sends water through V-7 up the supply riser to the hatchery building.','By gravity, water leaves Pond Ø through V-6.','Just before V-5 the line splits: one branch fills Ponds 1 & 2 through V-3A / V-3B, the other goes through V-5 to the Pond 3 headbox.','Hatchery effluent goes through V-11 to the headwaters (Note ***). Ponds 1 & 2 drain through V-4 to the creek.','Ponds 3 & 4 overflow down the fish ladder to the creek.']},
+ spawn:{t:'Spawning season',open:['V0','V9','V7','V6','V5','V3A','V3B','V2A','V2B','V11'],paths:['in_main','in_v9','pump','riser','to_hatch','v6a','to_ponds','v3a','v3b','v5','hdr','p1_hw','p2_hw','eff','v11_hw','raceway','ladder'],pump:1,
+   lead:'Ponds 1 & 2 are filled from the V-6 gravity line and their outflow is sent to the headwaters instead of the creek, adding flow to Ponds 3 & 4 and the fish ladder.',
+   steps:['Fill Ponds 1 & 2 through V-3A and V-3B, off the V-6 gravity line.','Close V-4 so pond water doesn\'t go straight to the creek.','Open V-2A and V-2B to send Pond 1 & 2 water to the headwaters junction.','Combined water rises through the upwell grate into Pond 3 and moves through Pond 4.','Extra flow down the fish ladder draws returning adults up into Pond 4.']},
+ drain0:{t:'Drain Pond Ø',open:['V0','V10','V14','V4','V11'],paths:['in_main','v10','riser','to_hatch','v14','eff','v11_hw','hdr','raceway','ladder'],pump:0,
+   lead:'Drawing Note 1. Creek water bypasses Pond Ø through V-10 so the hatchery building keeps its supply while Pond Ø empties through the standpipe.',
+   steps:['Open V-10 so creek water goes straight to the hatchery supply riser.','Open V-14 to drain Pond Ø through its standpipe to the creek.','Close V-9 so creek water stops filling Pond Ø.','Close V-6. With V-6 shut, Ponds 1 & 2 and the Pond 3 headbox lose their gravity supply from Pond Ø until it is refilled.']},
+ pumpfail:{t:'Pump failure',open:['V0','V9','V6','V5','V3A','V3B','V4','V11'],paths:NORMAL.filter(p=>p!=='pump').concat(['trash']),pump:0,trash:1,
+   lead:'Drawing Note 2. With the hatchery pump down, a trash pump at the quick coupler supplies the hatchery building. The outdoor ponds are on gravity through V-6, so they keep running.',
+   steps:['Close V-7 to isolate the dead pump.','Hook a trash pump up to the quick coupler and draw from Pond Ø.','Trash pump water fills the supply riser to the hatchery building.','Ponds 1 & 2 and the Pond 3 headbox are unaffected: they keep gravity flow through V-6 (and V-5).']},
+ drain34:{t:'Drain Ponds 3 & 4',open:['V0','V9','V7','V6','V3A','V3B','V4','V11','V12'],paths:['in_main','in_v9','pump','riser','to_hatch','v6a','to_ponds','v3a','v3b','p1_v4','p2_v4','v4_creek','eff','v11_hw','hdr','v12'],pump:1,
+   lead:'V-5 is closed to stop flow to the Pond 3 headbox, and V-12, at the head of the fish ladder, sends pond water to the creek. V-6 stays open so Ponds 1 & 2 keep their water.',
+   steps:['Close V-5 to stop gravity flow to the Pond 3 headbox (keep V-2A, V-2B and V-13 closed).','Lift the diamond plate over V-12 (Note 3: valves sit under diamond plate).','Open V-12 to drain Ponds 3 & 4 straight to Whatcom Creek.']}
 };
 
 /* ---------- talking points ---------- */
@@ -362,16 +386,16 @@ const Q=[
   a:`<p><b>Whatcom Creek.</b> Water enters through the intake screen in the creek under the <b>Dupont Street Bridge</b>, upstream of the ponds, and flows by gravity through the supply line.</p><p>${V('V-Ø')} (V-zero), right beside the intake screen, controls it.</p>`},
  {q:'What is the purpose of the air burst system?',s:'normal',src:0,hl:['intake','V0'],
   a:`<p>It keeps the <b>intake screen clear</b>. Leaves, sticks and sediment in the creek pile up on the screen and choke the flow. The air burst blasts compressed air back through the screen to knock that debris loose so the whole system keeps getting water.</p>`},
- {q:'What is the purpose of Pond Ø? Why is it elevated?',s:'normal',src:1,hl:['pond0','V9','pump','V6','V5','p:in_v9','p:v6','p:pump','siphon','p:siphon','upwell'],
-  a:`<p>Pond Ø is the <b>head pond and reservoir</b> for the facility. Creek water fills it through ${V('V-9')}. From there:</p><ul><li>The Pond Ø pump sends water to the hatchery and Ponds 1 & 2.</li><li>Gravity carries water through ${V('V-6')} and ${V('V-5')} to the upwell grate in Pond 3, and through the 8" siphon to Pond 4.</li></ul><p>It is <b>elevated so gravity can do the work</b>: water reaches Ponds 3 & 4 without a pump, and the stored volume is a buffer if the intake or pump has a problem.</p>`},
- {q:'How many inputs can provide water to Ponds 3 & 4?',s:'spawn',src:1,hl:['upwell','headbox','pond3','pond4','V5','V6','V2A','V2B','V11','V13','siphon','p:v6','p:p1_hw','p:p2_hw','p:v11_hw','p:hdr','p:siphon'],
-  a:`<p>The drawing shows <b>five</b>:</p><ul><li><b>Pond Ø gravity line</b> through ${V('V-6')} and ${V('V-5')} to the upwell grate</li><li><b>Pond 1</b> through ${V('V-2A')} to the headwaters</li><li><b>Pond 2</b> through ${V('V-2B')} to the headwaters</li><li><b>Hatchery effluent</b> through ${V('V-11')} to the headwaters</li><li><b>8" siphon</b> from Pond Ø into Pond 4 through ${V('V-13')}</li></ul><p>The first four all enter through the upwell grate in Pond 3.</p>`},
+ {q:'What is the purpose of Pond Ø? Why is it elevated?',s:'normal',src:1,hl:['pond0','V9','pump','V7','V6','V5','p:in_v9','p:pump','p:v6a','p:to_ponds','p:v5','siphon','p:siphon','upwell','pond1','pond2'],
+  a:`<p>Pond Ø is the <b>head pond and reservoir</b> for the facility. Creek water fills it through ${V('V-9')}. From there:</p><ul><li>The Pond Ø pump sends water through ${V('V-7')} to the <b>hatchery building only</b>.</li><li>Gravity carries water out through ${V('V-6')}. Just before ${V('V-5')} the line splits: one branch feeds <b>Ponds 1 & 2</b>, the other goes through V-5 to the <b>Pond 3 headbox</b>.</li><li>The 8" siphon links Pond Ø to Pond 4.</li></ul><p>It is <b>elevated so gravity can do the work</b>: all the outdoor ponds get water without a pump, and the stored volume is a buffer if the intake or pump has a problem.</p>`},
+ {q:'How many inputs can provide water to Ponds 3 & 4?',s:'spawn',src:1,hl:['upwell','headbox','pond3','pond4','V5','V6','V2A','V2B','V11','V13','siphon','p:v6a','p:v5','p:p1_hw','p:p2_hw','p:v11_hw','p:hdr','p:siphon'],
+  a:`<p>The drawing shows <b>five</b>:</p><ul><li><b>Pond Ø gravity line</b> through ${V('V-6')}, then ${V('V-5')}, into the Pond 3 headbox</li><li><b>Pond 1</b> through ${V('V-2A')} to the headwaters</li><li><b>Pond 2</b> through ${V('V-2B')} to the headwaters</li><li><b>Hatchery effluent</b> through ${V('V-11')} to the headwaters</li><li><b>8" siphon</b> from Pond Ø into Pond 4 through ${V('V-13')}</li></ul><p>The first four all enter through the upwell grate in Pond 3.</p>`},
  {q:'How can you open the kettle to drain Ponds 3 & 4?',s:'drain34',src:0,hl:['V12','p:v12','pond3','pond4','ladder'],
-  a:`<p>On the drawing, the drain for Ponds 3 & 4 is ${V('V-12')}, at the head of the fish ladder where it meets Pond 4. It sends water straight to Whatcom Creek.</p><ul><li>Shut off the inputs (V-6 / V-5, and keep V-2A, V-2B, V-13 closed).</li><li>Lift the diamond plate (Note 3: all valves are under diamond plate).</li><li>Open V-12.</li></ul>`},
+  a:`<p>On the drawing, the drain for Ponds 3 & 4 is ${V('V-12')}, at the head of the fish ladder where it meets Pond 4. It sends water straight to Whatcom Creek.</p><ul><li>Shut off the inputs: close V-5 (V-6 can stay open for Ponds 1 & 2), and keep V-2A, V-2B and V-13 closed.</li><li>Lift the diamond plate (Note 3: all valves are under diamond plate).</li><li>Open V-12.</li></ul>`},
  {q:'What is the purpose of filling Ponds 1 and 2 during spawning?',s:'spawn',src:1,hl:['pond1','pond2','V2A','V2B','V4','headbox','upwell','ladder','p:p1_hw','p:p2_hw','p:hdr','p:raceway','p:ladder'],
   a:`<p>To <b>add water to Ponds 3 & 4 and the fish ladder</b>. With ${V('V-4')} closed and ${V('V-2A')} / ${V('V-2B')} open, Pond 1 & 2 water goes to the headwaters, up through the upwell grate, through Ponds 3 & 4 and down the fish ladder.</p><p>The stronger flow out of the ladder is <b>attraction water</b>: returning adult salmon follow it up the ladder into Pond 4, where they can be held for spawning.</p>`},
  {q:'How is water sent to the hatchery? Which valve controls this?',s:'normal',src:1,hl:['pump','V7','coupler','p:pump','p:riser','p:to_hatch','hatchery','pond0'],
-  a:`<p>The <b>Pond Ø pump</b> draws from the center of Pond Ø and pushes water up the supply riser to the hatchery building.</p><p>${V('V-7')} controls it. (${V('V-10')} is a separate bypass from the intake used when Pond Ø is drained.)</p>`},
+  a:`<p>The <b>Pond Ø pump</b> draws from the center of Pond Ø and pushes water up the supply riser to the hatchery building.</p><p>${V('V-7')} controls it. V-7 feeds <b>only the hatchery building</b>; the outdoor ponds are fed by gravity through V-6. (${V('V-10')} is a separate bypass from the intake used when Pond Ø is drained.)</p>`},
  {q:'Where does water enter the hatchery building? The incubation room?',s:'normal',src:0,hl:['hatchery','p:to_hatch'],
   a:`<p><b>Building:</b> the supply line enters on the pond-facing side of the building, at the end above Pond 2.</p><p><b>Incubation room:</b> supply water is filtered, sterilized and chilled before it reaches the incubators. (The inside plumbing isn't shown on the flow drawing.)</p>`},
  {q:'Where does surplus water drain in the incubation room? Where does the water drain to?',s:'normal',src:0,hl:['hatchery','p:eff','V11','p:v11_hw','headbox','p:hdr','upwell','pond3'],
@@ -380,8 +404,8 @@ const Q=[
   a:`<p>Creek water carries <b>sediment</b> and <b>pathogens</b> (bacteria, viruses, fungal spores, parasites) from wild fish upstream. Eggs and alevins are very vulnerable to both.</p><ul><li><b>Filtering</b> removes sediment and particles that smother eggs and clog incubators.</li><li><b>Sterilizing</b> (usually UV) kills the pathogens that filters let through.</li></ul><p><b>Why both:</b> UV light can't reach organisms hidden in cloudy water or shaded by particles, so water has to be filtered first for sterilizing to work. Filtering alone doesn't kill anything.</p>`},
  {q:'Explain the role of the water chiller in the hatchery.',s:'normal',src:0,hl:['hatchery'],
   a:`<p>The chiller <b>cools incubation water</b> when creek temperatures run high.</p><ul><li>Egg development speed depends on temperature (tracked as temperature units), so chilling controls hatch and ponding timing.</li><li>Cooler water holds more dissolved oxygen.</li><li>Lower temperatures reduce disease and stress in eggs and alevins.</li></ul>`},
- {q:'If the Pond Ø pumps died, how do you get water to the outdoor ponds? The incubation room?',s:'pumpfail',src:1,hl:['V7','coupler','p:trash','p:riser','p:to_hatch','p:to_ponds','V6','V5','p:v6','V10','hatchery','pond1','pond2','pond3','pond4'],
-  a:`<p><b>Ponds 3 & 4</b> aren't affected. They keep getting gravity water from Pond Ø through ${V('V-6')} and ${V('V-5')}.</p><p><b>Incubation room and Ponds 1 & 2</b> (drawing Note 2):</p><ul><li>Close ${V('V-7')}.</li><li>Hook a trash pump up to the quick coupler and pump Pond Ø water into the supply riser.</li><li>That line feeds the hatchery and, through ${V('V-3A')} / ${V('V-3B')}, Ponds 1 & 2.</li></ul><p>${V('V-10')} also connects the intake straight to the riser, bypassing Pond Ø.</p>`}
+ {q:'If the Pond Ø pumps died, how do you get water to the outdoor ponds? The incubation room?',s:'pumpfail',src:1,hl:['V7','coupler','p:trash','p:riser','p:to_hatch','V6','V5','p:v6a','p:to_ponds','p:v5','p:v3a','p:v3b','hatchery','pond1','pond2','pond3','upwell'],
+  a:`<p><b>Outdoor ponds:</b> nothing changes. Ponds 1 & 2 and the Pond 3 headbox are fed by gravity through ${V('V-6')}, not by the pump, so they keep running.</p><p><b>Incubation room</b> (drawing Note 2): the pump line through ${V('V-7')} is what feeds the hatchery building.</p><ul><li>Close ${V('V-7')}.</li><li>Hook a trash pump up to the quick coupler and pump Pond Ø water into the supply riser.</li><li>That line carries the water to the hatchery building.</li></ul><p>${V('V-10')} also connects the intake straight to the riser, bypassing Pond Ø.</p>`}
 ];
 
 /* ---------- draw base ---------- */
@@ -440,6 +464,7 @@ for(const k in PATHS){const p=PATHS[k];
   if(best>40){ARROW_EL[k]=el('polygon',{points:'-7,-6 7,0 -7,6',transform:`translate(${mx} ${my}) rotate(${ang})`,class:'arw',fill:`var(--${p.c==='ladder'?'ladder':p.c})`},linesG)}
 }
 
+el('circle',{cx:884,cy:612,r:6,fill:'var(--pond)',stroke:'var(--surface)','stroke-width':2},linesG);
 /* ---------- structures on top of lines ---------- */
 // intake screen
 const it=partGroup('intake');el('rect',{x:1362,y:1034,width:24,height:24,fill:'var(--surface)',stroke:'var(--sup)','stroke-width':3,class:'shape'},it);
@@ -525,12 +550,30 @@ function clearHL(){hl=null;svg.classList.remove('dimmed');document.querySelector
 /* selection card */
 function renderSel(){const box=$('#sel');if(!selPart){box.hidden=true;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));return}
   const p=PARTS[selPart];let st='';if(VALVES[selPart]){const o=SCEN[scen].open.includes(selPart);st=` · <span class="chip ${o?'o':'c'}">${o?'OPEN':'CLOSED'} in “${SCEN[scen].t}”</span>`}
-  box.innerHTML=`<button class="x" id="selx">Clear</button><div class="k">${p.k}${st}</div><h3>${p.n}</h3><p>${p.d}</p>${notesBox('part-'+selPart,'My notes on '+p.n)}`;box.hidden=false;wireNotes(box);
+  box.innerHTML=`<button class="x" id="selx">Clear</button><div class="k">${p.k}${st}</div><h3>${p.n}</h3>${PICS[selPart]?picFigure(selPart):''}<p>${p.d}</p>${notesBox('part-'+selPart,'My notes on '+p.n)}`;box.hidden=false;wireNotes(box);if(PICS[selPart])wirePic(box,selPart);
   $('#selx').onclick=()=>{selPart=null;clearHL();renderSel();zoomTo(FULL)};
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.id===selPart));
 }
 function pickPart(id){selPart=id;const extra=[id];if(VALVES[id])extra.push('p:'+VALVE_PATH[id]);applyHL(extra);renderSel();setQ(-1,true);if(typeof fitTo==='function'){hint.hidden=true;fitTo([id],VALVES[id]||['coupler','upwell','headbox','pump','storm','cst','di1','di2','siphon','fishdep','intake'].includes(id)?420:520)}}
 for(const id in PART_EL){PART_EL[id].forEach(g=>{g.addEventListener('click',()=>pickPart(id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickPart(id)}})})}
+
+/* ---------- pictures ---------- */
+const PICS={}; /* photos removed for now */
+function photoHTML(id,k){const v=PICS[id][k];const fs=28;
+  const tags=v.labels.map(([t,px,py,tx,ty,pid,rr,dash])=>{const w=t.length*fs*.62+30;const on=pid&&v.focus===pid;
+    const ring=rr?`<circle cx="${px}" cy="${py}" r="${rr}" fill="none" stroke="${on?'#ffcc33':'#fff'}" stroke-width="${on?8:4}" ${dash||!on?'stroke-dasharray="12 9"':''} opacity="${on?1:.85}"/>`:'';
+    const bg=on?'#ffcc33':'#fff';
+    return `${ring}<line x1="${px}" y1="${py}" x2="${tx+w/2}" y2="${ty}" stroke="#fff" stroke-width="3"/>${rr?'':`<circle cx="${px}" cy="${py}" r="7" fill="#fff" stroke="#13221e" stroke-width="2.5"/>`}<rect x="${tx}" y="${ty-22}" width="${w}" height="42" rx="21" fill="${bg}" stroke="#13221e" stroke-width="${on?4:2.5}"/><text x="${tx+w/2}" y="${ty+8}" text-anchor="middle" font-family="IBM Plex Mono,ui-monospace,monospace" font-size="${fs}" font-weight="700" fill="#13221e">${t}</text>`}).join('');
+  return `<span class="photo"><img src="${v.src}" alt="${v.alt}" width="${v.w}" height="${v.h}"><svg viewBox="0 0 ${v.w} ${v.h}" aria-hidden="true">${tags}</svg></span>`}
+function picFigure(id,k){k=k||0;const L=PICS[id];const tabs=L.length>1?`<div class="picviews" role="group" aria-label="Picture views">${L.map((v,j)=>`<button type="button" data-pv="${j}" aria-pressed="${j===k}">${v.l}</button>`).join('')}</div>`:'';
+  return `<figure class="pic">${tabs}<button class="picbtn" type="button" data-pic="${id}" data-k="${k}" aria-label="Enlarge picture of ${PARTS[id].n}">${photoHTML(id,k)}</button><figcaption>${L[k].cap} Tap the picture to enlarge.</figcaption></figure>`}
+function wirePic(box,id){box.querySelectorAll('.picbtn').forEach(b=>b.onclick=()=>openLB(b.dataset.pic,+b.dataset.k));
+  box.querySelectorAll('.picviews button').forEach(b=>b.onclick=()=>{const f=box.querySelector('.pic');const tmp=document.createElement('div');tmp.innerHTML=picFigure(id,+b.dataset.pv);f.replaceWith(tmp.firstElementChild);wirePic(box,id)})}
+const lb=$('#lb');let lbReturn=null;
+function openLB(id,k){k=k||0;lbReturn=document.activeElement;$('#lbt').textContent=PARTS[id].n+' · '+PICS[id][k].l;$('#lbpic').innerHTML=photoHTML(id,k);$('#lbcap').textContent=PICS[id][k].cap;lb.hidden=false;$('#lbx').focus()}
+function closeLB(){lb.hidden=true;$('#lbpic').innerHTML='';if(lbReturn)lbReturn.focus()}
+$('#lbx').onclick=closeLB;lb.addEventListener('click',e=>{if(e.target===lb)closeLB()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden)closeLB()});
 
 /* ---------- notes (saved in this browser) ---------- */
 const NK='btcflow-note-';
@@ -579,7 +622,7 @@ $('#next').onclick=()=>setQ(curQ>=Q.length-1?0:curQ+1);
 /* parts tab */
 const pp=$('#pane-p');const groups={};for(const id in PARTS){(groups[PARTS[id].g]=groups[PARTS[id].g]||[]).push(id)}
 const gOrder=['Source','Ponds','Structures','Valves','Drains'];
-pp.innerHTML=gOrder.map(g=>`<h4>${g==='Source'?'Water source':g}</h4><div class="plist">${groups[g].map(id=>{const k=PARTS[id].k;const col=k==='Valve'?'var(--open)':k==='Pond'?'var(--water-edge)':k==='Drain'?'var(--drain)':k==='Water source'?'var(--sup)':'var(--pond)';return `<button class="pbtn" data-id="${id}"><span class="dot" style="background:${col}"></span>${PARTS[id].n}</button>`}).join('')}</div>`).join('');
+pp.innerHTML=gOrder.map(g=>`<h4>${g==='Source'?'Water source':g}</h4><div class="plist">${groups[g].map(id=>{const k=PARTS[id].k;const col=k==='Valve'?'var(--open)':k==='Pond'?'var(--water-edge)':k==='Drain'?'var(--drain)':k==='Water source'?'var(--sup)':'var(--pond)';return `<button class="pbtn" data-id="${id}"><span class="dot" style="background:${col}"></span>${PARTS[id].n}${PICS[id]?'<span class="haspic">Pic</span>':''}</button>`}).join('')}</div>`).join('');
 pp.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(PART_EL[id])pickPart(id);else{selPart=id;clearHL();renderSel()}});
 
 /* tabs */
